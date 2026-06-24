@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>RecruitTeamAzur - Recruitment Platform</title>
+  <title>AzurLize - Recruitment Platform</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -149,7 +149,7 @@
                     </div>
                     
                     <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Recruit<span className="text-indigo-600">Ops</span></h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Team <span className="text-indigo-600">AzurLize</span></h1>
                         <p className="text-sm text-gray-500">{title}</p>
                         {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
                     </div>
@@ -188,10 +188,10 @@
             const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium transition-all";
 
             return (
-                <AuthLayout title="Masuk ke Platform Operasional">
+                <AuthLayout title="L O G I N">
                     {errorMsg && <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs flex items-center"><i className="ph-bold ph-warning-circle mr-2"></i><b>{errorMsg}</b></div>}
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="relative"><i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Username TG (contoh: @Oka)" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className={inputClass} disabled={isLoading} required /></div>
+                        <div className="relative"><i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Input Username" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className={inputClass} disabled={isLoading} required /></div>
                         <div className="relative"><i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type={showPassword ? "text" : "password"} placeholder="Password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={inputClass} disabled={isLoading} required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i className={`ph-bold ${showPassword ? 'ph-eye-slash' : 'ph-eye'} text-xl`}></i></button></div>
                         <button type="submit" disabled={isLoading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all flex items-center justify-center disabled:opacity-70">{isLoading ? <><i className="ph-bold ph-spinner ph-spin text-xl mr-2"></i> Memverifikasi...</> : "Masuk"}</button>
                     </form>
@@ -2222,7 +2222,7 @@
                                     </svg>
                                 </div>
                                 
-                                <span className="text-xl font-bold">Recruit<span className="text-indigo-600">Ops</span></span>
+                                <span className="text-xl font-bold">Team <span className="text-indigo-600">AzurLize</span></span>
                                 {isMobile && <button onClick={()=>setSidebarOpen(false)} className="ml-auto text-gray-400 text-xl p-2"><i className="ph-bold ph-x"></i></button>}
                             </div>
                             <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar pb-24 md:pb-6">
