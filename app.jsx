@@ -646,7 +646,7 @@ const ExecutiveDashboard = ({ authUser }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 sm:gap-4 bg-white/60 dark:bg-gray-800/60 p-4 sm:p-6 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-md shadow-sm">
                 <div className="w-full md:w-auto">
                     <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-                        <i className="ph-fill ph-squares-four text-indigo-500 animate-pulse"></i> Executive Overview
+                        <i className="ph-fill ph-squares-four text-indigo-500 animate-pulse"></i> Overview
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 sm:mt-1.5 leading-relaxed">
                         Ringkasan performa rekrutmen {isPrivileged ? 'seluruh tim' : 'pribadi Anda'} secara *real-time*.
@@ -1318,7 +1318,7 @@ const FollowUpCenter = ({ authUser }) => {
 
 const RecruiterPerformance = ({ authUser }) => {
     const [data, setData] = useState([]);
-    const [users, setUsers] = useState([]); // State untuk data akun
+    const [users, setUsers] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
     
     const isPrivileged = authUser && ['Superadmin', 'Admin'].includes(authUser.role);
@@ -1327,14 +1327,12 @@ const RecruiterPerformance = ({ authUser }) => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Fetch data harian pelamar
                 const res = await fetch(SCRIPT_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ action: 'getDailyData', role: authUser ? authUser.role : null, username: authUser ? authUser.username : null, name: authUser ? authUser.name : null }) 
                 });
                 const result = await res.json();
                 
-                // Fetch data users untuk mencocokkan profil
                 const resUsers = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getUsers' }) });
                 const userResult = await resUsers.json();
                 if (userResult.status === 'success') {
@@ -1353,7 +1351,6 @@ const RecruiterPerformance = ({ authUser }) => {
         fetchData();
     }, [authUser, isPrivileged]);
 
-    // Fungsi Pengambilan Gaya Sesuai Role
     const getRoleStyle = (role) => {
         const r = (role || 'staff').toLowerCase();
         if (r === 'superadmin') return { 
@@ -1376,7 +1373,6 @@ const RecruiterPerformance = ({ authUser }) => {
         };
     };
 
-    // Kalkulasi Metrik & Penggabungan dengan Data User
     const performanceMap = data.reduce((acc, curr) => {
         const rec = curr.recruiter || 'Unknown';
         if (!acc[rec]) acc[rec] = { total: 0, acc: 0 };
@@ -1392,13 +1388,13 @@ const RecruiterPerformance = ({ authUser }) => {
         const stats = performanceMap[username];
         const convRate = stats.total > 0 ? Math.round((stats.acc / stats.total) * 100) : 0;
         return { username, fullName, role, ...stats, convRate };
-    }).sort((a, b) => b.acc - a.acc || b.total - a.total); // Urutkan berdasarkan ACC tertinggi, lalu Total Leads tertinggi
+    }).sort((a, b) => b.acc - a.acc || b.total - a.total); 
 
     return (
-        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12">
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12 w-full">
             
             {/* HEADER BANNER */}
-            <div className="bg-white/60 dark:bg-gray-800/60 p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-md shadow-sm">
+            <div className="bg-white/60 dark:bg-gray-800/60 p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-md shadow-sm w-full mx-auto">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
                         <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
@@ -1411,11 +1407,10 @@ const RecruiterPerformance = ({ authUser }) => {
                             Analisis efektivitas konversi setiap anggota tim operasi. Data diurutkan berdasarkan jumlah kandidat ACC terbanyak ke terendah secara otomatis.
                         </p>
                     </div>
-                    {/* Ringkasan Keseluruhan Cepat */}
                     {!isLoading && performanceArray.length > 0 && (
                         <div className="flex gap-3 mt-2 md:mt-0">
                             <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 px-4 py-2.5 rounded-xl">
-                                <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-0.5">Total Staf Aktif</div>
+                                <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-0.5">Total Staf Terdata</div>
                                 <div className="text-lg font-black text-indigo-700 dark:text-indigo-400">{performanceArray.length} <span className="text-sm font-bold text-indigo-400 dark:text-indigo-500">Orang</span></div>
                             </div>
                         </div>
@@ -1425,12 +1420,12 @@ const RecruiterPerformance = ({ authUser }) => {
 
             {/* STATE LOADING / KOSONG */}
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 text-indigo-500">
+                <div className="flex flex-col items-center justify-center py-20 text-indigo-500 w-full">
                     <i className="ph-bold ph-spinner ph-spin text-5xl mb-4 drop-shadow-md"></i>
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400">Mengkalkulasi Kinerja...</span>
                 </div>
             ) : performanceArray.length === 0 ? (
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-3xl border border-dashed border-gray-300 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-3xl border border-dashed border-gray-300 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center shadow-sm w-full mx-auto">
                     <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mb-4 text-gray-400">
                         <i className="ph-fill ph-users-three text-4xl"></i>
                     </div>
@@ -1438,67 +1433,66 @@ const RecruiterPerformance = ({ authUser }) => {
                     <p className="text-xs sm:text-sm text-gray-500 max-w-sm">Belum ada aktivitas konversi pelamar yang masuk ke sistem kami.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    {/* RENDER KARTU PROFIL PER RECRIUTER */}
+                /* PERBAIKAN: Mengatur Grid Responsif. 
+                   Satu kolom (full width) di HP.
+                   Dua kolom di layar menengah (Tablet).
+                   Tiga kolom di Desktop.
+                   Serta menambahkan p-2 (padding) agar shadow/bayangan kartu tidak terpotong. */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 p-2 w-full mx-auto">
                     {performanceArray.map((staff, i) => {
                         const rank = i + 1;
                         const isTopThree = rank <= 3;
                         const style = getRoleStyle(staff.role);
+                        const initialLetter = (staff.fullName && staff.fullName.trim() !== '') ? staff.fullName.charAt(0).toUpperCase() : <i className="ph-bold ph-user"></i>;
 
                         return (
-                            <div key={i} className={`bg-white/90 dark:bg-[#151a23]/90 backdrop-blur-xl border rounded-[24px] p-5 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group ${isTopThree ? 'border-amber-200 dark:border-amber-900/40' : 'border-gray-200/80 dark:border-gray-700/60 hover:' + style.borderGlow}`}>
+                            <div key={i} className={`bg-white dark:bg-[#151a23] backdrop-blur-xl border rounded-[24px] p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden group ${isTopThree ? 'border-amber-200 dark:border-amber-900/40' : 'border-gray-200/80 dark:border-gray-700/60 hover:' + style.borderGlow}`}>
                                 
-                                {/* Background Ikon Pemanis */}
                                 <i className={`ph-fill ${isTopThree ? 'ph-crown' : 'ph-lightning'} absolute -top-4 -right-4 text-8xl opacity-[0.03] dark:opacity-[0.04] group-hover:scale-125 group-hover:rotate-12 transition-transform duration-700 pointer-events-none ${isTopThree ? 'text-amber-500' : 'text-indigo-500'}`}></i>
 
-                                {/* Pita Medali (Hanya untuk Top 3) */}
                                 {isTopThree && (
                                     <div className={`absolute top-0 right-0 px-3 py-1.5 text-[10px] font-black text-white rounded-bl-2xl shadow-sm z-10 flex items-center ${rank === 1 ? 'bg-gradient-to-r from-amber-500 to-orange-400' : rank === 2 ? 'bg-gradient-to-r from-gray-400 to-slate-400' : 'bg-gradient-to-r from-amber-700 to-orange-800'}`}>
                                         <i className="ph-fill ph-medal mr-1"></i> Peringkat #{rank}
                                     </div>
                                 )}
 
-                                {/* HEADER: Profil Staf */}
-                                <div className="flex items-center gap-3 sm:gap-4 mb-6 relative z-10">
-                                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl text-white shrink-0 shadow-sm border-2 ${isTopThree ? 'border-amber-100 dark:border-amber-500/30' : 'border-transparent'} ${style.avatarBg}`}>
-                                        {staff.fullName ? staff.fullName.charAt(0).toUpperCase() : <i className="ph-bold ph-user"></i>}
+                                <div className="flex items-center gap-4 mb-6 relative z-10">
+                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl text-white shrink-0 shadow-sm border-2 ${isTopThree ? 'border-amber-100 dark:border-amber-500/30' : 'border-transparent'} ${style.avatarBg}`}>
+                                        {initialLetter}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="font-black text-gray-900 dark:text-white text-sm sm:text-base truncate flex items-center flex-wrap gap-1.5 mb-1">
+                                        <div className="font-black text-gray-900 dark:text-white text-base truncate flex items-center flex-wrap gap-1.5 mb-1">
                                             <i className={`${style.icon} text-sm`}></i>
-                                            <span className="truncate">{staff.fullName}</span>
-                                            {/* Badge Role */}
-                                            <span className={`px-2 py-0.5 text-[8px] sm:text-[9px] rounded uppercase tracking-widest border ${style.badge} shrink-0`}>
+                                            <span className="truncate max-w-[120px] sm:max-w-xs">{staff.fullName}</span>
+                                            <span className={`px-2 py-0.5 text-[9px] rounded uppercase tracking-widest border ${style.badge} shrink-0`}>
                                                 {staff.role}
                                             </span>
                                         </div>
-                                        <div className="text-[10px] sm:text-[11px] font-mono font-bold text-[#f23d5b] dark:text-[#f23d5b] truncate">
+                                        <div className="text-[11px] font-mono font-bold text-[#f23d5b] dark:text-[#f23d5b] truncate">
                                             @ {staff.username}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* BODY: Metrik Angka Utama */}
-                                <div className="grid grid-cols-2 gap-3 mb-5">
-                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col justify-center">
+                                <div className="grid grid-cols-2 gap-4 mb-5">
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col justify-center">
                                         <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center"><i className="ph-bold ph-users mr-1"></i> Total Leads</div>
-                                        <div className="text-xl sm:text-2xl font-black text-gray-800 dark:text-gray-200">{staff.total}</div>
+                                        <div className="text-2xl font-black text-gray-800 dark:text-gray-200">{staff.total}</div>
                                     </div>
-                                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/40 flex flex-col justify-center shadow-sm">
+                                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/40 flex flex-col justify-center shadow-sm">
                                         <div className="text-[9px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1 flex items-center"><i className="ph-bold ph-check-circle mr-1"></i> Goal ACC</div>
-                                        <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{staff.acc}</div>
+                                        <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{staff.acc}</div>
                                     </div>
                                 </div>
 
-                                {/* FOOTER: Conversion Rate Progress Bar */}
-                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div className="pt-3 border-t border-gray-100 dark:border-gray-700/50">
                                     <div className="flex justify-between items-end mb-2">
                                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conversion Rate</div>
-                                        <div className={`text-sm sm:text-base font-black ${staff.convRate >= 30 ? 'text-emerald-500' : staff.convRate >= 10 ? 'text-indigo-500' : 'text-gray-500'}`}>
+                                        <div className={`text-base font-black ${staff.convRate >= 30 ? 'text-emerald-500' : staff.convRate >= 10 ? 'text-indigo-500' : 'text-gray-500'}`}>
                                             {staff.convRate}%
                                         </div>
                                     </div>
-                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 sm:h-2 overflow-hidden shadow-inner p-[1px] border border-gray-200 dark:border-gray-700/50">
+                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden shadow-inner p-[1px] border border-gray-200 dark:border-gray-700/50">
                                         <div 
                                             className={`h-full rounded-full relative overflow-hidden transition-all duration-1000 ease-out ${
                                                 staff.convRate >= 30 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 
@@ -1507,11 +1501,10 @@ const RecruiterPerformance = ({ authUser }) => {
                                             }`} 
                                             style={{ width: `${staff.convRate}%` }}
                                         >
-                                            {/* Shimmer Effect */}
                                             <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
                                         </div>
                                     </div>
-                                    <div className="text-[9px] font-bold text-gray-400 text-right mt-1.5">
+                                    <div className="text-[9px] font-bold text-gray-400 text-right mt-2">
                                         Rasio (ACC / Leads)
                                     </div>
                                 </div>
@@ -1524,10 +1517,9 @@ const RecruiterPerformance = ({ authUser }) => {
         </div>
     );
 };
-
 const RecruitmentGoals = ({ authUser }) => {
     const [data, setData] = useState([]);
-    const [users, setUsers] = useState([]); // State tambahan untuk data akun pengguna
+    const [users, setUsers] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
     
     const isPrivileged = authUser && ['Superadmin', 'Admin'].includes(authUser.role);
@@ -1536,14 +1528,12 @@ const RecruitmentGoals = ({ authUser }) => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Fetch data pelamar harian
                 const res = await fetch(SCRIPT_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ action: 'getDailyData', role: authUser ? authUser.role : null, username: authUser ? authUser.username : null, name: authUser ? authUser.name : null }) 
+                    body: JSON.stringify({ action: 'getDailyData', role: authUser?.role, username: authUser?.username, name: authUser?.name }) 
                 });
                 const result = await res.json();
                 
-                // Fetch data user untuk mendapatkan Nama Lengkap dan Role
                 const resUsers = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getUsers' }) });
                 const userResult = await resUsers.json();
                 if (userResult.status === 'success') {
@@ -1553,67 +1543,122 @@ const RecruitmentGoals = ({ authUser }) => {
                 if (result.status === 'success') { 
                     let fetchedData = Array.isArray(result.data) ? result.data : [];
                     if (!isPrivileged) {
-                        fetchedData = fetchedData.filter(d => d.recruiter === authUser.username || d.recruiter === authUser.name);
+                        fetchedData = fetchedData.filter(d => d.recruiter === authUser?.username || d.recruiter === authUser?.name);
                     }
                     setData(fetchedData); 
                 }
-            } catch (error) {} finally { setIsLoading(false); }
+            } catch (error) {
+                console.error(error);
+            } finally { 
+                setIsLoading(false); 
+            }
         };
         fetchData();
     }, [authUser, isPrivileged]);
 
-    // Fungsi Pengambilan Gaya Sesuai Role (Persis seperti User Management & Leaderboard)
-    const getRoleStyle = (role) => {
-        const r = (role || 'staff').toLowerCase();
-        if (r === 'superadmin') return { 
-            avatarBg: 'bg-[#e73a4b]', 
-            icon: 'ph-fill ph-crown text-[#e73a4b]', 
-            badge: 'bg-[#e73a4b]/10 text-[#e73a4b] border-[#e73a4b]/20'
-        };
-        if (r === 'admin') return { 
-            avatarBg: 'bg-[#2563eb]', 
-            icon: 'ph-fill ph-shield-check text-[#2563eb]', 
-            badge: 'bg-[#2563eb]/10 text-[#2563eb] border-[#2563eb]/20'
-        };
-        // Default Staff
-        return { 
-            avatarBg: 'bg-[#f59e0b]', 
-            icon: 'ph-fill ph-user text-[#f59e0b]', 
-            badge: 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20'
-        };
+    // ========================================================
+    // LOGIKA PERIODE AKTIF (Senin - Minggu, Reset Senin 16:00)
+    // ========================================================
+    const getActiveWeekDates = () => {
+        const now = new Date();
+        const currentDay = now.getDay(); 
+        const currentHour = now.getHours();
+
+        let referenceDate = new Date(now);
+        referenceDate.setHours(0, 0, 0, 0);
+
+        if (currentDay === 1 && currentHour < 16) {
+            referenceDate.setDate(referenceDate.getDate() - 7);
+        } else if (currentDay !== 1) {
+            const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+            referenceDate.setDate(referenceDate.getDate() + diffToMonday);
+        }
+
+        const activeDates = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(referenceDate);
+            d.setDate(d.getDate() + i);
+            activeDates.push(new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0]);
+        }
+        return activeDates;
     };
 
-    // Konfigurasi Target
-    const targetPerRecruiter = 30; 
-    const targetCompany = 100; 
+    const activeDates = getActiveWeekDates();
 
-    // Mapping Progress per Recruiter
-    const progressMap = data.reduce((acc, curr) => { 
-        if (curr.results === 'Acc') { 
-            const rec = curr.recruiter || 'Unknown'; 
-            if (!acc[rec]) acc[rec] = 0; 
-            acc[rec] += 1; 
-        } 
-        return acc; 
-    }, {});
+    // ========================================================
+    // LOGIKA TARGET BERSUMBER DARI USER ACCOUNT
+    // ========================================================
+    
+    // 1. Ambil HANYA daftar staf dari Akun yang Aktif
+    const activeStaffs = users.filter(u => u.role === 'Staff' && u.status === 'Aktif');
+    
+    // 2. Tentukan Target Tim (3/Hari * 7 Hari = 21 per Staf)
+    const targetPerRecruiter = 21; 
+    // FIX: Target murni berdasarkan jumlah staf aktif. Jika 0 staf = 0 target
+    const targetCompany = activeStaffs.length * targetPerRecruiter; 
 
-    // Gabungkan dengan data Users dan Urutkan dari pencapaian tertinggi
-    const progressArray = Object.keys(progressMap).map(username => {
-        const userDb = users.find(u => u.username === username);
-        const fullName = userDb ? userDb.name : username;
-        const role = userDb ? userDb.role : 'Staff';
-        return {
-            username,
-            fullName,
-            role,
-            acc: progressMap[username]
-        };
-    }).sort((a, b) => b.acc - a.acc);
+    // 3. Hanya ambil data berstatus 'Acc' dan masuk periode minggu ini
+    const validData = data.filter(d => d.results === 'Acc' && activeDates.includes(d.tanggal));
 
-    // Kalkulasi Banner Utama
-    const totalAcc = Object.values(progressMap).reduce((a, b) => a + b, 0);
+    // 4. Siapkan Wadah (Map) berdasarkan Username Akun
+    const progressMap = {};
+    activeStaffs.forEach(u => {
+        if (isPrivileged || u.username === authUser?.username || u.name === authUser?.name) {
+            progressMap[u.username] = { 
+                username: u.username,
+                fullName: u.name, 
+                role: u.role, 
+                acc: 0 
+            };
+        }
+    });
+
+    // 5. Cocokkan data ACC dengan Akun
+    validData.forEach(curr => { 
+        const rec = (curr.recruiter || '').trim().toLowerCase(); 
+        
+        const matchedUser = activeStaffs.find(u => 
+            (u.username && u.username.toLowerCase() === rec) || 
+            (u.name && u.name.toLowerCase() === rec)
+        );
+
+        if (matchedUser) {
+            if (progressMap[matchedUser.username]) {
+                progressMap[matchedUser.username].acc += 1;
+            }
+        } else {
+            const originalRec = curr.recruiter || 'Unknown';
+            if (isPrivileged || originalRec === authUser?.username || originalRec === authUser?.name) {
+                if (!progressMap[originalRec]) {
+                    progressMap[originalRec] = { 
+                        username: originalRec, 
+                        fullName: originalRec, 
+                        role: 'Non-Staff / Arsip', 
+                        acc: 0 
+                    };
+                }
+                progressMap[originalRec].acc += 1;
+            }
+        }
+    });
+
+    // 6. Urutkan berdasarkan pencapaian tertinggi
+    const progressArray = Object.values(progressMap).sort((a, b) => b.acc - a.acc);
+
+    // Kalkulasi Angka di Banner Utama
+    const totalAcc = progressArray.reduce((sum, staff) => sum + staff.acc, 0);
     const activeTarget = isPrivileged ? targetCompany : targetPerRecruiter;
-    const companyProgress = Math.min(Math.round((totalAcc / activeTarget) * 100), 100);
+    // FIX: Cegah error pembagian oleh 0 (NaN) jika activeTarget adalah 0
+    const companyProgress = activeTarget > 0 ? Math.min(Math.round((totalAcc / activeTarget) * 100), 100) : 0;
+
+    // Fungsi Pengambilan Gaya Role
+    const getRoleStyle = (role) => {
+        const r = (role || 'staff').toLowerCase();
+        if (r === 'superadmin') return { avatarBg: 'bg-[#e73a4b]', icon: 'ph-fill ph-crown text-[#e73a4b]', badge: 'bg-[#e73a4b]/10 text-[#e73a4b] border-[#e73a4b]/20' };
+        if (r === 'admin') return { avatarBg: 'bg-[#2563eb]', icon: 'ph-fill ph-shield-check text-[#2563eb]', badge: 'bg-[#2563eb]/10 text-[#2563eb] border-[#2563eb]/20' };
+        if (r === 'non-staff / arsip') return { avatarBg: 'bg-gray-500', icon: 'ph-fill ph-archive text-gray-500', badge: 'bg-gray-100 text-gray-500 border-gray-200' };
+        return { avatarBg: 'bg-[#f59e0b]', icon: 'ph-fill ph-user text-[#f59e0b]', badge: 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20' };
+    };
 
     return (
         <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12">
@@ -1621,36 +1666,33 @@ const RecruitmentGoals = ({ authUser }) => {
             {/* 1. MAIN BANNER (Premium Glassmorphism) */}
             <div className="bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] p-6 sm:p-8 lg:p-10 rounded-[32px] flex flex-col md:flex-row justify-between items-center shadow-2xl relative overflow-hidden gap-8 md:gap-12 border border-indigo-500/20">
                 
-                {/* Efek Latar Belakang Banner */}
-                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-                <div className="absolute -left-20 -top-20 w-64 h-64 bg-indigo-500/30 rounded-full blur-[80px]"></div>
-                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-purple-500/30 rounded-full blur-[80px]"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+                <div className="absolute -left-20 -top-20 w-64 h-64 bg-indigo-500/30 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-purple-500/30 rounded-full blur-[80px] pointer-events-none"></div>
                 <i className="ph-fill ph-target absolute -right-10 md:right-10 top-1/2 -translate-y-1/2 opacity-[0.03] text-[200px] md:text-[300px] pointer-events-none"></i>
                 
-                {/* Bagian Kiri: Teks & Angka */}
                 <div className="z-10 w-full md:w-auto text-center md:text-left flex flex-col items-center md:items-start">
                     <div className="inline-flex items-center gap-2 text-indigo-300 font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-4 bg-indigo-950/50 px-3 py-1.5 rounded-full border border-indigo-800/50">
                         <i className="ph-bold ph-flag-banner text-sm"></i>
-                        Target {isPrivileged ? 'Keseluruhan Perusahaan' : 'Individu Pribadi'}
+                        Target {isPrivileged ? 'Keseluruhan Tim' : 'Individu Pribadi'}
                     </div>
                     <div className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-2 md:mb-4 tracking-tight drop-shadow-lg flex items-baseline gap-2">
                         {totalAcc} <span className="text-2xl sm:text-3xl text-indigo-400 font-medium">/ {activeTarget}</span>
                     </div>
-                    <div className={`inline-flex items-center px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest border shadow-lg backdrop-blur-sm ${companyProgress >= 100 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-emerald-500/20' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 shadow-indigo-500/20'}`}>
-                        <i className={`ph-bold ${companyProgress >= 100 ? 'ph-check-circle' : 'ph-trend-up'} mr-2 text-base sm:text-lg`}></i> 
-                        {companyProgress >= 100 ? 'Target Terpenuhi!' : 'Sedang Berjalan'}
+                    <div className={`inline-flex items-center px-4 py-2 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest border shadow-lg backdrop-blur-sm ${companyProgress >= 100 && activeTarget > 0 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-emerald-500/20' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 shadow-indigo-500/20'}`}>
+                        <i className={`ph-bold ${companyProgress >= 100 && activeTarget > 0 ? 'ph-check-circle' : 'ph-trend-up'} mr-2 text-base sm:text-lg`}></i> 
+                        {companyProgress >= 100 && activeTarget > 0 ? 'Target Terpenuhi!' : 'Sedang Berjalan'}
                     </div>
                 </div>
                 
-                {/* Bagian Kanan: Progress Bar Besar */}
                 <div className="z-10 w-full md:w-1/2 bg-white/5 p-5 sm:p-6 rounded-3xl backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                     <div className="flex justify-between items-end text-sm mb-3 font-black text-gray-300 uppercase tracking-widest">
-                        <span>Pencapaian</span>
+                        <span>Pencapaian Mingguan</span>
                         <span className="text-xl sm:text-2xl text-white">{companyProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-900/80 rounded-full h-4 sm:h-5 overflow-hidden shadow-inner p-0.5 border border-white/5">
                         <div 
-                            className={`h-full rounded-full relative overflow-hidden transition-all duration-1000 ease-out ${companyProgress >= 100 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'}`} 
+                            className={`h-full rounded-full relative overflow-hidden transition-all duration-1000 ease-out ${companyProgress >= 100 && activeTarget > 0 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'}`} 
                             style={{ width: `${companyProgress}%` }}
                         >
                             <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
@@ -1660,6 +1702,11 @@ const RecruitmentGoals = ({ authUser }) => {
                         <span>0 ACC</span>
                         <span>{activeTarget} ACC</span>
                     </div>
+                    {isPrivileged && (
+                        <div className="text-[9px] text-indigo-300 mt-3 pt-2 border-t border-white/10 text-right">
+                            *Dihitung dari total {activeStaffs.length} Staf Aktif x 21 ACC
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1676,31 +1723,28 @@ const RecruitmentGoals = ({ authUser }) => {
                     <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mb-4 text-gray-400">
                         <i className="ph-fill ph-target text-4xl"></i>
                     </div>
-                    <h3 className="text-gray-900 dark:text-white font-black text-lg mb-1">Belum Ada Pencapaian</h3>
-                    <p className="text-xs sm:text-sm text-gray-500 max-w-sm">Belum ada kandidat berstatus ACC yang tercatat dalam sistem.</p>
+                    <h3 className="text-gray-900 dark:text-white font-black text-lg mb-1">Belum Ada Staf/Data</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 max-w-sm">Daftar staf aktif masih kosong atau target belum tercapai minggu ini.</p>
                 </div>
             )}
 
-            {/* 3. GRID KARTU STAF (Responsif & Selaras dengan User Account) */}
+            {/* 3. GRID KARTU STAF */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {!isLoading && progressArray.map((staff, i) => {
-                    const pct = Math.min(Math.round((staff.acc / targetPerRecruiter) * 100), 100);
+                    const pct = Math.min(Math.round((staff.acc / targetPerRecruiter) * 100) || 0, 100);
                     const isDone = pct >= 100;
-                    
-                    // Gunakan fungsi RoleStyle
                     const style = getRoleStyle(staff.role);
+                    
+                    const initialLetter = (staff.fullName && staff.fullName.trim() !== '') ? staff.fullName.charAt(0).toUpperCase() : <i className="ph-bold ph-user"></i>;
 
                     return (
                         <div key={i} className="bg-white/90 dark:bg-[#151a23]/90 backdrop-blur-xl border border-gray-200/80 dark:border-gray-700/60 rounded-[24px] p-5 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
                             
-                            {/* Efek Confetti/Glow jika Target Tercapai */}
                             {isDone && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full blur-2xl pointer-events-none"></div>}
 
-                            {/* HEADER KARTU: Avatar, Nama, Badge */}
                             <div className="flex items-center gap-3 sm:gap-4 mb-6">
-                                {/* Avatar (Warna Solid sesuai Role) */}
                                 <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl text-white shrink-0 shadow-sm ${style.avatarBg} relative`}>
-                                    {staff.fullName ? staff.fullName.charAt(0).toUpperCase() : <i className="ph-bold ph-user"></i>}
+                                    {initialLetter}
                                     {isDone && (
                                         <div className="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-0.5">
                                             <div className="bg-emerald-500 text-white rounded-full p-1 shadow-sm">
@@ -1714,7 +1758,6 @@ const RecruitmentGoals = ({ authUser }) => {
                                     <div className="font-black text-gray-900 dark:text-white text-sm sm:text-base truncate flex items-center flex-wrap gap-1.5 mb-1">
                                         <i className={`${style.icon} text-sm`}></i>
                                         <span className="truncate">{staff.fullName}</span>
-                                        {/* Badge Role */}
                                         <span className={`px-2 py-0.5 text-[8px] sm:text-[9px] rounded uppercase tracking-widest border ${style.badge} shrink-0`}>
                                             {staff.role}
                                         </span>
@@ -1725,7 +1768,6 @@ const RecruitmentGoals = ({ authUser }) => {
                                 </div>
                             </div>
 
-                            {/* BODY KARTU: Angka Pencapaian Besar */}
                             <div className="flex justify-between items-end mb-4 bg-gray-50/50 dark:bg-gray-900/30 p-3 sm:p-4 rounded-2xl border border-gray-100 dark:border-gray-800/50">
                                 <div>
                                     <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
@@ -1740,7 +1782,6 @@ const RecruitmentGoals = ({ authUser }) => {
                                 </div>
                             </div>
 
-                            {/* PROGRESS BAR KUSTOM KARTU */}
                             <div className="w-full">
                                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
                                     <span className={isDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}>
@@ -2039,7 +2080,7 @@ const SystemSettings = () => (
         {/* Pengaturan Perusahaan */}
         <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="font-black text-lg mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 flex items-center">
-                <i className="ph-bold ph-buildings mr-3 text-indigo-500 text-2xl"></i> Pengaturan Perusahaan
+                <i className="ph-bold ph-buildings mr-3 text-indigo-500 text-2xl"></i> Pengaturan
             </h3>
             <div className="space-y-6">
                 <div>
@@ -3421,7 +3462,6 @@ const UserManagement = ({ authUser }) => {
     const [modalMode, setModalMode] = useState('add');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // PERBAIKAN: Menambahkan photoMimeType dan previewUrl
     const [formData, setFormData] = useState({ 
         name: '', username: '', uid: '', password: '', role: 'Staff', status: 'Aktif', 
         photo: '', photoBase64: null, photoMimeType: null, previewUrl: null 
@@ -3436,6 +3476,8 @@ const UserManagement = ({ authUser }) => {
 
     const isSuperadmin = authUser && authUser.role === 'Superadmin';
     const isAdmin = authUser && authUser.role === 'Admin';
+    // Mengecek apakah yang login memiliki akses istimewa (Admin/Superadmin)
+    const isPrivileged = isSuperadmin || isAdmin;
 
     const fetchUsers = async () => {
         setIsLoading(true);
@@ -3481,7 +3523,6 @@ const UserManagement = ({ authUser }) => {
         setIsModalOpen(true); 
     };
 
-    // PERBAIKAN: Fungsi Upload Foto agar diterima Google Drive
     const handlePhotoChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -3489,12 +3530,12 @@ const UserManagement = ({ authUser }) => {
         
         const reader = new FileReader();
         reader.onloadend = () => { 
-            const base64String = reader.result.split(',')[1]; // Wajib dipisah
+            const base64String = reader.result.split(',')[1];
             setFormData({ 
                 ...formData, 
                 photoBase64: base64String, 
-                photoMimeType: file.type, // Wajib dikirim
-                previewUrl: reader.result // Untuk ditampilkan di layar sesaat
+                photoMimeType: file.type, 
+                previewUrl: reader.result 
             }); 
         };
         reader.readAsDataURL(file);
@@ -3523,7 +3564,7 @@ const UserManagement = ({ authUser }) => {
             const result = await response.json();
             
             if (result.status === 'success') { 
-                await fetchUsers(); // Refresh data agar foto dari drive muncul
+                await fetchUsers(); 
                 setIsModalOpen(false); 
             } else alert(result.message);
         } catch (error) { alert('Terjadi kesalahan koneksi.'); } finally { setIsSubmitting(false); }
@@ -3539,7 +3580,6 @@ const UserManagement = ({ authUser }) => {
         } catch (error) { alert('Terjadi kesalahan saat menghapus.'); fetchUsers(); }
     };
 
-    // PERBAIKAN: Format Tanggal Anti-Rusak
     const formatDate = (dateStr) => {
         if (!dateStr || dateStr === '-') return '-';
         try {
@@ -3620,9 +3660,11 @@ const UserManagement = ({ authUser }) => {
                 const isExpanded = expandedUser === u.username;
                 const st = getRoleStyles(u.role, isExpanded);
                 
-                // PERBAIKAN: Menampilkan foto dengan memprioritaskan previewUrl saat diedit, atau photo URL asli
                 const displayPhoto = (formData.username === u.username && formData.previewUrl) ? formData.previewUrl : (u.photo || u.photoUrl);
                 const newlyJoined = isNewUser(u.tanggalBergabung); 
+
+                // LOGIKA PRIVASI UID: Tampilkan UID jika yang login adalah Admin/Superadmin ATAU jika staf mengklik akunnya sendiri
+                const canSeeUid = isPrivileged || (authUser && authUser.username === u.username);
 
                 return (
                     <div key={i} className={`rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm ${st.card}`}>
@@ -3690,8 +3732,10 @@ const UserManagement = ({ authUser }) => {
                                     <div>
                                         <span className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 sm:mb-2.5">Informasi Data</span>
                                         <div className="space-y-1.5 sm:space-y-2 text-xs text-gray-700 dark:text-gray-300">
-                                            <div className="flex items-center"><span className="w-20 text-gray-400 flex items-center"><i className="ph-bold ph-hash mr-1.5"></i> UID</span><span className="font-mono font-bold bg-white/60 dark:bg-gray-800/60 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-700 truncate max-w-[120px] sm:max-w-[200px]">{u.uid || '-'}</span></div>
-                                            {/* PERBAIKAN: Format tanggal memanggil fungsi formatDate yang aman */}
+                                            {/* PENGKONDISIAN UID */}
+                                            {canSeeUid && (
+                                                <div className="flex items-center"><span className="w-20 text-gray-400 flex items-center"><i className="ph-bold ph-hash mr-1.5"></i> UID</span><span className="font-mono font-bold bg-white/60 dark:bg-gray-800/60 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-700 truncate max-w-[120px] sm:max-w-[200px]">{u.uid || '-'}</span></div>
+                                            )}
                                             <div className="flex items-center"><span className="w-20 text-gray-400 flex items-center"><i className="ph-bold ph-calendar-blank mr-1.5"></i> Gabung</span><span className="font-bold">{formatDate(u.tanggalBergabung)}</span></div>
                                         </div>
                                     </div>
@@ -3699,7 +3743,7 @@ const UserManagement = ({ authUser }) => {
                                     <div className="sm:col-span-2 lg:col-span-1 lg:text-right flex flex-col lg:items-end justify-start mt-2 sm:mt-0">
                                         <span className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 lg:mb-2.5">Tindakan</span>
                                         <div className="flex flex-col sm:flex-row lg:flex-row flex-wrap gap-2 w-full lg:w-auto">
-                                            {isPending && (isSuperadmin || isAdmin) && (
+                                            {isPending && isPrivileged && (
                                                 <button onClick={() => handleAcc(u)} className="w-full sm:w-auto justify-center px-4 py-2.5 sm:py-2 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center transform sm:hover:-translate-y-0.5">
                                                     <i className="ph-bold ph-check-circle mr-1.5 text-base"></i> Terima (ACC)
                                                 </button>
@@ -3757,7 +3801,12 @@ const UserManagement = ({ authUser }) => {
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mr-3"><i className="ph-bold ph-users text-lg sm:text-xl"></i></div>
                             User Management
                         </h3>
-                        <button onClick={handleOpenAdd} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all transform hover:-translate-y-0.5"><i className="ph-bold ph-user-plus mr-2 text-lg"></i> Tambah User</button>
+                        {/* PENGKONDISIAN TOMBOL TAMBAH USER: Hanya tampil untuk Admin/Superadmin */}
+                        {isPrivileged && (
+                            <button onClick={handleOpenAdd} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all transform hover:-translate-y-0.5">
+                                <i className="ph-bold ph-user-plus mr-2 text-lg"></i> Tambah User
+                            </button>
+                        )}
                     </div>
 
                     {isLoading ? (
@@ -3888,9 +3937,9 @@ const App = () => {
     if (!authUser) return (<div className={isDark ? 'dark' : ''}>{authView === 'login' ? <Login onLogin={login} onNavigateRegister={()=>setAuthView('register')} /> : <Register onRegister={login} onNavigateLogin={()=>setAuthView('login')} />}<button onClick={()=>setIsDark(!isDark)} className="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg text-gray-500 z-50 transition-transform active:scale-95"><i className={`ph-bold ${isDark?'ph-sun':'ph-moon'} text-xl`}></i></button></div>);
 
     const NAVIGATION = [
-        { s: 'Overview', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'dashboard', l: 'Executive Dashboard', i: 'ph-squares-four', roles: ['Superadmin', 'Admin'] }, { id: 'announcement', l: 'Announcement Center', i: 'ph-megaphone', roles: ['Superadmin', 'Admin', 'Staff'], badge: unreadAnnouncements }, { id: 'follow_up', l: 'Follow Up Center', i: 'ph-bell-ringing', roles: ['Superadmin', 'Admin', 'Staff'] }] },
-        { s: 'Performance', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'performance', l: 'Recruiter Performance', i: 'ph-medal', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'goals', l: 'Recruitment Goals', i: 'ph-target', roles: ['Superadmin', 'Admin'] }, { id: 'channels', l: 'Channel Performance', i: 'ph-megaphone', roles: ['Superadmin', 'Admin'] }] },
-        { s: 'Management', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'daily_data', l: 'Daily Data', i: 'ph-address-book', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'daily_stats', l: 'Daily Stats', i: 'ph-chart-bar', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'payroll', l: 'Payroll', i: 'ph-currency-circle-dollar', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'users', l: 'User Accounts', i: 'ph-user-gear', roles: ['Superadmin', 'Admin'] }] },
+        { s: 'Overview', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'dashboard', l: 'Dashboard', i: 'ph-squares-four', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'announcement', l: 'Pemberitahuan Dan Chat', i: 'ph-megaphone', roles: ['Superadmin', 'Admin', 'Staff'], badge: unreadAnnouncements }, { id: 'follow_up', l: 'Follow Up', i: 'ph-bell-ringing', roles: ['Superadmin', 'Admin', 'Staff'] }] },
+        { s: 'Performance', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'performance', l: 'Recruiter Performance', i: 'ph-medal', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'goals', l: 'Recruitment Goals', i: 'ph-target', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'channels', l: 'Channel Performance', i: 'ph-megaphone', roles: ['Superadmin', 'Admin', 'Staff'] }] },
+        { s: 'Management', allowed: ['Superadmin', 'Admin', 'Staff'], items: [{ id: 'daily_data', l: 'Daily Data', i: 'ph-address-book', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'daily_stats', l: 'Daily Stats', i: 'ph-chart-bar', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'payroll', l: 'Payroll', i: 'ph-currency-circle-dollar', roles: ['Superadmin', 'Admin', 'Staff'] }, { id: 'users', l: 'User Accounts', i: 'ph-user-gear', roles: ['Superadmin', 'Admin', 'Staff'] }] },
         { s: 'System', allowed: ['Superadmin'], items: [{ id: 'settings', l: 'Settings', i: 'ph-gear', roles: ['Superadmin'] }] }
     ].map(sec => ({ ...sec, items: sec.items.filter(item => item.roles.includes(authUser.role)) })).filter(sec => sec.items.length > 0 && sec.allowed.includes(authUser.role));
 
@@ -4035,7 +4084,7 @@ const App = () => {
                             )}
                             <div>
                                 <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">{pageTitle}</h1>
-                                <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest hidden sm:block mt-0.5">RecruitOps Management System</p>
+                                <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest hidden sm:block mt-0.5">AzurLize Management System</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
