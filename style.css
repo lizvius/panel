@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-body { 
+/* PERBAIKAN SCROLL WEBVIEW ANDROID */
+html, body { 
+    /* Mencegah efek mantul (overscroll) bawaan browser yang sering bentrok dengan Android */
+    overscroll-behavior-y: none; 
+    /* Mengizinkan usapan layar secara vertikal dengan lancar */
+    touch-action: pan-y; 
+    
     font-family: 'Inter', sans-serif; 
     background-color: #F8FAFC; 
     transition: background-color 0.3s; 
@@ -41,8 +47,10 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
     animation: spin 1s linear infinite; 
 }
 
-.min-h-dvh { min-height: 100dvh; }
-.h-dvh { height: 100dvh; }
+/* PERBAIKAN VIEWPORT UNTUK WEBVIEW */
+/* Kita ubah dvh (dynamic) menjadi vh (viewport statis) atau % agar Android tidak kebingungan */
+.min-h-dvh { min-height: 100vh; min-height: 100%; }
+.h-dvh { height: 100vh; height: 100%; }
 
 @media print {
     body { background-color: white !important; }
