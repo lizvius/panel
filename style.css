@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #F8FAFC; 
+    transition: background-color 0.3s; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+html.dark body { 
+    background-color: #111827; 
+}
+
+.custom-scrollbar::-webkit-scrollbar { 
+    width: 4px; 
+    height: 4px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background-color: #cbd5e1; 
+    border-radius: 10px; 
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb { 
+    background-color: #4b5563; 
+}
+
+.hide-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+
+@keyframes spin { 
+    100% { transform: rotate(360deg); } 
+}
+
+.ph-spin { 
+    animation: spin 1s linear infinite; 
+}
+
+.min-h-dvh { min-height: 100dvh; }
+.h-dvh { height: 100dvh; }
+
+@media print {
+    body { background-color: white !important; }
+    .dark body { background-color: white !important; color: black !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    button, nav, aside, header { display: none !important; }
+    .print\:p-0 { padding: 0 !important; }
+    .print\:block { display: block !important; }
+}
