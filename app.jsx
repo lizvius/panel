@@ -1603,7 +1603,29 @@ const RecruitmentGoals = ({ authUser }) => {
     const targetCompany = activeStaffs.length * targetPerRecruiter; 
 
     // 3. Hanya ambil data berstatus 'Acc' dan masuk periode minggu ini
-    const validData = data.filter(d => d.results === 'Acc' && activeDates.includes(d.tanggal));
+    // 3. Hanya ambil data berstatus 'Acc' dan masuk periode minggu ini (Timezone Safe)
+    const validData = data.filter(d => {
+    // Pastikan status Acc
+        const isAcc = d.results && d.results.trim().toLowerCase() === 'acc';
+        if (!isAcc) return false;
+
+        let datePart = '';
+        if (d.tanggal) {
+            // Konversi ke objek Date JavaScript
+            const dObj = new Date(d.tanggal);
+        
+            // Jika valid, ubah ke waktu lokal (WIB/WITA/WIT) lalu ambil format YYYY-MM-DD
+            if (!isNaN(dObj.getTime())) {
+                datePart = new Date(dObj.getTime() - (dObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            } else {
+             // Fallback jika berupa teks murni
+                datePart = d.tanggal.split('T')[0];
+            }
+        }
+
+        // Cocokkan dengan array activeDates minggu ini
+        return activeDates.includes(datePart);
+    });
 
     // 4. Siapkan Wadah (Map) berdasarkan Username Akun
     const progressMap = {};
@@ -2138,11 +2160,10 @@ const SystemSettings = () => (
     </div>
 );
 
-
 const Payroll = ({ authUser }) => {
     const [data, setData] = useState([]);
     const [users, setUsers] = useState([]);
-    const [dailyData, setDailyData] = useState([]); // STATE BARU: Menyimpan data pelamar harian
+    const [dailyData, setDailyData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterPeriod, setFilterPeriod] = useState('');
@@ -2152,8 +2173,8 @@ const Payroll = ({ authUser }) => {
     const [modalMode, setModalMode] = useState('add');
     const [formData, setFormData] = useState({
         id: '', periode: '', username: '', uid: '', hariKerja: '', totalPostingan: '',
-        deklarasiT0: '', sebenarnyaT0: '', t3: '', deklarasiV0: '', sebenarnyaV0: '',
-        rasioPeningkatan: '', komisi: '', bonusT0: '', bonusT3: '', otherBonus: '', deduksi: '',
+        deklarasiT0: '0', sebenarnyaT0: '0', t3: '', deklarasiV0: '0', sebenarnyaV0: '0',
+        rasioPeningkatan: '0%', komisi: '', bonusT0: '', bonusT3: '', otherBonus: '', deduksi: '',
         status: 'Draft'
     });
 
@@ -2199,51 +2220,86 @@ const Payroll = ({ authUser }) => {
     }, [authUser, isPrivileged]);
 
     // =========================================================================
-    // FUNGSI BARU: AUTO-FILL SEBENARNYA T0 & V0 DARI DAILY DATA (STATUS ACC)
+    // FUNGSI AUTO-FILL 1: DEKLARASI (Semua Status) & SEBENARNYA (Hanya ACC)
     // =========================================================================
     useEffect(() => {
-        // Hanya jalan ketika form terbuka dan username & periode sudah dipilih
         if (isModalOpen && formData.username && formData.periode && dailyData.length > 0) {
-            
-            // Set rentang waktu (Senin - Minggu / 7 Hari) berdasarkan input Periode
             const startDate = new Date(formData.periode);
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(startDate.getTime());
-            endDate.setDate(endDate.getDate() + 6); // Ditambah 6 Hari = 7 Hari total
+            endDate.setDate(endDate.getDate() + 6); 
             endDate.setHours(23, 59, 59, 999);
 
-            let autoT0 = 0;
-            let autoV0 = 0;
+            let declT0 = 0; 
+            let declV0 = 0; 
+            let autoT0 = 0; 
+            let autoV0 = 0; 
 
             dailyData.forEach(d => {
                 const rec = d.recruiter || d.username;
-                // Hanya cari data milik staff terpilih dan yang hasilnya ACC
-                if (rec === formData.username && d.results === 'Acc') {
+                if (rec === formData.username) {
                     const dDate = new Date(d.tanggal);
-                    // Cek apakah tanggal input ACC tersebut masuk dalam rentang 1 minggu ini
                     if (dDate >= startDate && dDate <= endDate) {
-                        if ((d.grup || '').toUpperCase().includes('V0')) {
-                            autoV0++;
-                        } else {
-                            autoT0++;
+                        const isV0 = (d.grup || '').toUpperCase().includes('V0');
+                        const statusData = (d.results || '').toLowerCase();
+                        
+                        if (isV0) declV0++;
+                        else declT0++;
+
+                        if (statusData === 'acc') {
+                            if (isV0) autoV0++;
+                            else autoT0++;
                         }
                     }
                 }
             });
 
-            // Update ke formData hanya jika berbeda agar tidak terjadi infinite loop
-            if (formData.sebenarnyaT0 !== autoT0.toString() || formData.sebenarnyaV0 !== autoV0.toString()) {
+            if (formData.sebenarnyaT0 !== autoT0.toString() || 
+                formData.sebenarnyaV0 !== autoV0.toString() ||
+                formData.deklarasiT0 !== declT0.toString() ||
+                formData.deklarasiV0 !== declV0.toString()) {
                 setFormData(prev => ({
                     ...prev,
                     sebenarnyaT0: autoT0.toString(),
-                    sebenarnyaV0: autoV0.toString()
+                    sebenarnyaV0: autoV0.toString(),
+                    deklarasiT0: declT0.toString(),
+                    deklarasiV0: declV0.toString()
                 }));
             }
         }
     }, [formData.username, formData.periode, dailyData, isModalOpen]);
 
+    // =========================================================================
+    // FUNGSI AUTO-FILL 2: RASIO PENINGKATAN
+    // Rumus: IFERROR((T3 + Sebenarnya V0) / (Sebenarnya T0 + T3 + Deklarasi V0 + Sebenarnya V0); 0)
+    // =========================================================================
+    useEffect(() => {
+        if (isModalOpen) {
+            const t3 = Number(formData.t3) || 0;
+            const sebV0 = Number(formData.sebenarnyaV0) || 0;
+            const sebT0 = Number(formData.sebenarnyaT0) || 0;
+            const dekV0 = Number(formData.deklarasiV0) || 0;
+
+            const pembilang = t3 + sebV0;
+            const penyebut = sebT0 + t3 + dekV0 + sebV0;
+
+            let rasioValue = 0;
+            if (penyebut !== 0) {
+                rasioValue = (pembilang / penyebut) * 100;
+            }
+
+            const formatRasio = `${rasioValue.toFixed(1).replace(/\.0$/, '')}%`;
+
+            if (formData.rasioPeningkatan !== formatRasio) {
+                setFormData(prev => ({
+                    ...prev,
+                    rasioPeningkatan: formatRasio
+                }));
+            }
+        }
+    }, [formData.t3, formData.sebenarnyaV0, formData.sebenarnyaT0, formData.deklarasiV0, isModalOpen]);
+
     const formatCurrency = (amount) => `Rp ${(Number(amount) || 0).toLocaleString('id-ID')}`;
-    const formatToDDMMYYYY = (dateStr) => { if (!dateStr) return '-'; const d = new Date(dateStr); return isNaN(d.getTime()) ? dateStr : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; };
     
     const calculatePayrollMetrix = (input) => {
         const aktif = Number(input.sebenarnyaT0) || 0;
@@ -2325,13 +2381,13 @@ const Payroll = ({ authUser }) => {
     };
 
     const InputCls = "w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-gray-400";
+    
     // ----------------------------------------------------------------------
-    // TAMPILAN KHUSUS STAFF (DIGITAL PAYSLIP KEREN)
+    // TAMPILAN KHUSUS STAFF
     // ----------------------------------------------------------------------
     if (!isPrivileged) {
         return (
             <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12">
-                {/* BANNER UTAMA */}
                 <div className="bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] p-6 sm:p-8 lg:p-10 rounded-[32px] shadow-2xl relative overflow-hidden text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-500/20">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                     <div className="absolute -left-20 -top-20 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px]"></div>
@@ -2427,6 +2483,10 @@ const Payroll = ({ authUser }) => {
             </div>
         );
     }
+    
+    // ----------------------------------------------------------------------
+    // TAMPILAN ADMIN
+    // ----------------------------------------------------------------------
     return (
         <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12">
             
@@ -2515,7 +2575,15 @@ const Payroll = ({ authUser }) => {
                     )}
                     
                     {isPrivileged && (
-                        <button onClick={()=>{setModalMode('add'); setFormData({id:'', periode: new Date().toISOString().split('T')[0], username: '', uid: '', hariKerja: '', totalPostingan: '', deklarasiT0: '', sebenarnyaT0: '', t3: '', deklarasiV0: '', sebenarnyaV0: '', rasioPeningkatan: '', komisi: '', bonusT0: '', bonusT3: '', otherBonus: '', deduksi: '', status: 'Draft'}); setIsModalOpen(true);}} className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white font-black text-sm rounded-xl shadow-[0_4px_14px_rgba(79,70,229,0.39)] hover:bg-indigo-700 flex justify-center items-center transition-all transform hover:-translate-y-0.5">
+                        <button onClick={()=>{
+                            setModalMode('add'); 
+                            setFormData({
+                                id:'', periode: new Date().toISOString().split('T')[0], username: '', uid: '', hariKerja: '', totalPostingan: '', 
+                                deklarasiT0: '0', sebenarnyaT0: '0', t3: '', deklarasiV0: '0', sebenarnyaV0: '0', 
+                                rasioPeningkatan: '0%', komisi: '', bonusT0: '', bonusT3: '', otherBonus: '', deduksi: '', status: 'Draft'
+                            }); 
+                            setIsModalOpen(true);
+                        }} className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white font-black text-sm rounded-xl shadow-[0_4px_14px_rgba(79,70,229,0.39)] hover:bg-indigo-700 flex justify-center items-center transition-all transform hover:-translate-y-0.5">
                             <i className="ph-bold ph-plus mr-2 text-lg"></i> Buat Slip Baru
                         </button>
                     )}
@@ -2602,8 +2670,8 @@ const Payroll = ({ authUser }) => {
                                     <th className="px-5 py-4">Informasi Staf & Periode</th>
                                     <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700">Hari</th>
                                     <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700">Pstgn</th>
-                                    <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700 bg-emerald-50/30 dark:bg-emerald-900/10" colSpan="2">T0 (Dek/Seb)</th>
-                                    <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700 bg-purple-50/30 dark:bg-purple-900/10" colSpan="2">V0 (Dek/Seb)</th>
+                                    <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700 bg-emerald-50/30 dark:bg-emerald-900/10" colSpan="2">T0 (Masuk/Acc)</th>
+                                    <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700 bg-purple-50/30 dark:bg-purple-900/10" colSpan="2">V0 (Masuk/Acc)</th>
                                     <th className="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-700">T3</th>
                                     <th className="px-4 py-4 text-center border-l border-gray-200 dark:border-gray-700 text-indigo-600">Level</th>
                                     <th className="px-5 py-4 text-right border-l border-gray-200 dark:border-gray-700">Gaji Pokok</th>
@@ -2699,7 +2767,7 @@ const Payroll = ({ authUser }) => {
                                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm">
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-4 flex items-center"><i className="ph-fill ph-identification-card mr-1.5 text-sm"></i> 1. Identitas & Periode</h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase ml-1">Periode (Tanggal)</label><input type="date" required className={InputCls} value={formData.periode} onChange={e=>setFormData({...formData, periode: e.target.value})} disabled={modalMode === 'edit'} /></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase ml-1">Periode (Tanggal Awal Minggu)</label><input type="date" required className={InputCls} value={formData.periode} onChange={e=>setFormData({...formData, periode: e.target.value})} disabled={modalMode === 'edit'} /></div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase ml-1">Pilih Anggota Staff</label>
                                             <select required className={InputCls} value={formData.username} onChange={e=>handleUserSelect(e.target.value)} disabled={modalMode === 'edit'}>
@@ -2722,24 +2790,30 @@ const Payroll = ({ authUser }) => {
                                     </div>
 
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                        {/* T0 - Auto-Filled from Daily Data */}
+                                        {/* T0 - Auto-Filled */}
                                         <div className="sm:col-span-1 border-r border-gray-100 dark:border-gray-700 pr-2 relative">
                                             <div className="text-[10px] font-black text-gray-700 dark:text-gray-300 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1">KANDIDAT AKTIF (T0)</div>
                                             <div className="space-y-3">
-                                                <div><label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Deklarasi (Manual)</label><input type="number" min="0" placeholder="0" className={InputCls} value={formData.deklarasiT0} onChange={e=>setFormData({...formData, deklarasiT0: e.target.value})} /></div>
                                                 <div>
-                                                    <label className="block text-[9px] font-black text-emerald-600 mb-1 uppercase flex items-center justify-between">Sebenarnya (Auto) <i className="ph-fill ph-lightning text-amber-500"></i></label>
+                                                    <label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Total Masuk</label>
+                                                    <input type="number" readOnly placeholder="0" className={`${InputCls} bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed font-mono`} value={formData.deklarasiT0} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[9px] font-black text-emerald-600 mb-1 uppercase flex items-center justify-between">Di-ACC <i className="ph-fill ph-lightning text-amber-500"></i></label>
                                                     <input type="number" readOnly placeholder="0" className={`${InputCls} border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 cursor-not-allowed`} value={formData.sebenarnyaT0} />
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* V0 - Auto-Filled from Daily Data */}
+                                        {/* V0 - Auto-Filled */}
                                         <div className="sm:col-span-1 border-r border-gray-100 dark:border-gray-700 pr-2 pl-2 relative">
                                             <div className="text-[10px] font-black text-gray-700 dark:text-gray-300 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1">KANDIDAT ELIT (V0)</div>
                                             <div className="space-y-3">
-                                                <div><label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Deklarasi (Manual)</label><input type="number" min="0" placeholder="0" className={InputCls} value={formData.deklarasiV0} onChange={e=>setFormData({...formData, deklarasiV0: e.target.value})} /></div>
                                                 <div>
-                                                    <label className="block text-[9px] font-black text-purple-600 mb-1 uppercase flex items-center justify-between">Sebenarnya (Auto) <i className="ph-fill ph-lightning text-amber-500"></i></label>
+                                                    <label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Total Masuk</label>
+                                                    <input type="number" readOnly placeholder="0" className={`${InputCls} bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed font-mono`} value={formData.deklarasiV0} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[9px] font-black text-purple-600 mb-1 uppercase flex items-center justify-between">Di-ACC <i className="ph-fill ph-lightning text-amber-500"></i></label>
                                                     <input type="number" readOnly placeholder="0" className={`${InputCls} border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 cursor-not-allowed`} value={formData.sebenarnyaV0} />
                                                 </div>
                                             </div>
@@ -2749,12 +2823,15 @@ const Payroll = ({ authUser }) => {
                                             <div className="text-[10px] font-black text-gray-700 dark:text-gray-300 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1">PROMOSI T3</div>
                                             <div className="space-y-3">
                                                 <div><label className="block text-[9px] font-black text-indigo-600 mb-1 uppercase">Dipromosikan (Mnl) <span className="text-rose-500">*</span></label><input type="number" min="0" required placeholder="0" className={`${InputCls} border-indigo-200 dark:border-indigo-800 focus:ring-indigo-500`} value={formData.t3} onChange={e=>setFormData({...formData, t3: e.target.value})} /></div>
-                                                <div><label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Rasio Peningkatan</label><input type="text" placeholder="Misal: 10%" className={InputCls} value={formData.rasioPeningkatan} onChange={e=>setFormData({...formData, rasioPeningkatan: e.target.value})} /></div>
+                                                <div>
+                                                    <label className="block text-[9px] font-bold text-gray-400 mb-1 uppercase">Rasio Pktn (Auto)</label>
+                                                    <input type="text" readOnly placeholder="0%" className={`${InputCls} bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed`} value={formData.rasioPeningkatan} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="mt-3 text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/40 flex items-center">
-                                        <i className="ph-bold ph-info mr-1.5 text-sm"></i> Nilai "Sebenarnya T0 & V0" diisi otomatis berdasarkan data pelamar ACC di sistem (Daily Data) selama 7 hari sejak tanggal periode yang Anda pilih.
+                                        <i className="ph-bold ph-info mr-1.5 text-sm"></i> Nilai "Total Masuk" dan "Di-ACC" dihitung otomatis dari riwayat pelamar minggu tersebut. "Rasio Pktn" (Peningkatan) juga dihitung otomatis.
                                     </div>
                                 </div>
 
@@ -4015,7 +4092,7 @@ const App = () => {
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-            <div className="flex flex-1 overflow-hidden relative z-10">
+            <div className="flex flex-1 overflow-hidden relative">
                 
                 {/* Mobile Sidebar Overlay */}
                 {isMobile && isSidebarOpen && (
@@ -4139,7 +4216,7 @@ const App = () => {
 
             {/* FLOATING BOTTOM NAV (Modern iOS Style for Mobile) */}
             {isMobile && (
-                <div className="fixed bottom-5 left-4 right-4 z-50 animate-in slide-in-from-bottom-6 duration-500">
+                <div className="fixed bottom-5 left-4 right-4 z-40 animate-in slide-in-from-bottom-6 duration-500">
                     <nav className="bg-white/95 dark:bg-[#1a202c]/95 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-[28px] flex justify-around items-center h-[72px] px-2 shadow-[0_20px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
                         {bottomNavItems.map((item) => {
                             const isActive = activeTab === item.id;
