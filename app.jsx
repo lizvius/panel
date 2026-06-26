@@ -1,9 +1,6 @@
 const { useState, useEffect, useRef } = React;
-
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDrmJ8WbMTy5RBKNdmBfMXIL0CKYT8xTteOqGolCPDoD8G5Ra65Yzh3N-sjLuKlRpg/exec';
-const DB = { payroll: [] };
 
-// HELPER: Format ke DD/MM/YYYY
 const formatToDDMMYYYY = (dateStr) => {
     if (!dateStr || dateStr === '-') return '-';
         try {
@@ -17,11 +14,11 @@ const formatToDDMMYYYY = (dateStr) => {
     }
 };
 
-const Card = ({ children, className = '' }) => (
+const Card = ({children, className = '' }) => (
     <div className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-colors ${className}`}>{children}</div>
 );
 
-const Badge = ({ children, variant = 'default', className = '' }) => {
+const Badge = ({children, variant = 'default', className = '' }) => {
     const variants = {
         default: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
         success: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50',
@@ -37,7 +34,7 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
     );
 };
 
-const ProgressBar = ({ progress, label, color = 'bg-indigo-600' }) => (
+const ProgressBar = ({progress, label, color = 'bg-indigo-600' }) => (
     <div className="w-full">
         {/* Label & Persentase */}
         <div className="flex justify-between items-center mb-2">
@@ -71,7 +68,7 @@ const ProgressBar = ({ progress, label, color = 'bg-indigo-600' }) => (
     </div>
 );
 
-const AuthLayout = ({ children, title, subtitle }) => (
+const AuthLayout = ({children, title, subtitle }) => (
     <div className="min-h-dvh flex items-center justify-center bg-[#F8FAFC] dark:bg-gray-900 p-4 transition-colors duration-300 relative overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         <Card className="w-full max-w-md p-6 sm:p-8 relative z-10 shadow-2xl shadow-indigo-100 dark:shadow-none border-t-4 border-t-indigo-600">
@@ -116,35 +113,35 @@ const Login = ({ onLogin, onNavigateRegister }) => {
 };
 
 const Register = ({ onRegister, onNavigateLogin }) => {
-        const [isLoading, setIsLoading] = useState(false);
-        const [errorMsg, setErrorMsg] = useState('');
-        const [successMsg, setSuccessMsg] = useState('');
-        const [formData, setFormData] = useState({ name: '', username: '', uid: '', password: '' });
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+    const [formData, setFormData] = useState({ name: '', username: '', uid: '', password: '' });
 
-        const handleSubmit = async (e) => {
-            e.preventDefault(); setIsLoading(true); setErrorMsg(''); setSuccessMsg('');
-            try {
-                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', name: formData.name.trim(), username: formData.username.trim(), uid: formData.uid.trim(), password: formData.password }) });
-                const result = await response.json();
-                if (result.status === 'success') { setSuccessMsg(result.message); setFormData({ name: '', username: '', uid: '', password: '' }); setTimeout(() => onNavigateLogin(), 3000); } else { setErrorMsg(result.message || 'Gagal mendaftar.'); }
-            } catch (error) { setErrorMsg('Terjadi kesalahan koneksi.'); } finally { setIsLoading(false); }
-        };
-        const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium transition-all";
-        return (
-            <AuthLayout title="Buat Akun Baru" subtitle="Pendaftaran Tim Operations">
-                {errorMsg && <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs flex items-center"><i className="ph-bold ph-warning-circle mr-2"></i><b>{errorMsg}</b></div>}
-                {successMsg && <div className="mb-4 p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xs flex items-center"><i className="ph-bold ph-check-circle mr-2"></i><b>{successMsg}</b></div>}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative"><i className="ph-bold ph-identification-card absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Nama Lengkap" value={formData.name} required onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
-                    <div className="relative"><i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Username (Pakai '@')" value={formData.username} required onChange={e => setFormData({...formData, username: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
-                    <div className="relative"><i className="ph-bold ph-hash absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="UID Anda" value={formData.uid} required onChange={e => setFormData({...formData, uid: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
-                    <div className="relative"><i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="password" placeholder="Password" value={formData.password} required onChange={e => setFormData({...formData, password: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
-                    <button type="submit" disabled={isLoading || successMsg} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold transition-colors">{isLoading ? 'Memproses...' : 'Daftar Sekarang'}</button>
-                </form>
-                <div className="mt-6 text-center text-sm text-gray-500"><button onClick={onNavigateLogin} className="text-indigo-600 font-bold hover:underline">Sudah punya akun? Masuk</button></div>
-            </AuthLayout>
-        );
+    const handleSubmit = async (e) => {
+        e.preventDefault(); setIsLoading(true); setErrorMsg(''); setSuccessMsg('');
+        try {
+            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', name: formData.name.trim(), username: formData.username.trim(), uid: formData.uid.trim(), password: formData.password }) });
+            const result = await response.json();
+            if (result.status === 'success') { setSuccessMsg(result.message); setFormData({ name: '', username: '', uid: '', password: '' }); setTimeout(() => onNavigateLogin(), 3000); } else { setErrorMsg(result.message || 'Gagal mendaftar.'); }
+        } catch (error) { setErrorMsg('Terjadi kesalahan koneksi.'); } finally { setIsLoading(false); }
     };
+    const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium transition-all";
+    return (
+        <AuthLayout title="Buat Akun Baru" subtitle="Pendaftaran Tim Operations">
+            {errorMsg && <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-xs flex items-center"><i className="ph-bold ph-warning-circle mr-2"></i><b>{errorMsg}</b></div>}
+            {successMsg && <div className="mb-4 p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xs flex items-center"><i className="ph-bold ph-check-circle mr-2"></i><b>{successMsg}</b></div>}
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative"><i className="ph-bold ph-identification-card absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Nama Lengkap" value={formData.name} required onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
+                <div className="relative"><i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="Username (Pakai '@')" value={formData.username} required onChange={e => setFormData({...formData, username: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
+                <div className="relative"><i className="ph-bold ph-hash absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="text" placeholder="UID Anda" value={formData.uid} required onChange={e => setFormData({...formData, uid: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
+                <div className="relative"><i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-xl text-gray-400"></i><input type="password" placeholder="Password" value={formData.password} required onChange={e => setFormData({...formData, password: e.target.value})} className={inputClass} disabled={isLoading || successMsg}/></div>
+                <button type="submit" disabled={isLoading || successMsg} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold transition-colors">{isLoading ? 'Memproses...' : 'Daftar Sekarang'}</button>
+            </form>
+            <div className="mt-6 text-center text-sm text-gray-500"><button onClick={onNavigateLogin} className="text-indigo-600 font-bold hover:underline">Sudah punya akun? Masuk</button></div>
+        </AuthLayout>
+    );
+};
 
 const ANNOUNCEMENT_CHANNELS = [
     { id: 'rules', name: 'Rules', icon: 'ph-push-pin', color: 'rose', grad: 'from-rose-500 to-red-600' },
@@ -154,7 +151,7 @@ const ANNOUNCEMENT_CHANNELS = [
     { id: 'general', name: 'General Discussion', icon: 'ph-chats', color: 'blue', grad: 'from-blue-500 to-cyan-500' }
 ];
 
-const AnnouncementCenter = ({ authUser }) => {
+const AnnouncementCenter = ({authUser}) => {
     const [activeChannel, setActiveChannel] = useState('announcement');
     const [posts, setPosts] = useState([]);
     const [newContent, setNewContent] = useState('');
@@ -573,8 +570,7 @@ const AnnouncementCenter = ({ authUser }) => {
     );
 };
 
-
-const ExecutiveDashboard = ({ authUser }) => {
+const ExecutiveDashboard = ({authUser}) => {
     const [stats, setStats] = useState({ total: 0, pending: 0, active: 0, failed: 0, recruiters: 0, thisWeek: 0 });
     const [alerts, setAlerts] = useState({ highRisk: 0, mediumRisk: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -863,8 +859,7 @@ const ExecutiveDashboard = ({ authUser }) => {
     );
 };
 
-
-const DailyData = ({ authUser }) => {
+const DailyData = ({authUser}) => {
     const [data, setData] = useState([]);
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -880,7 +875,7 @@ const DailyData = ({ authUser }) => {
 
     const isPrivileged = authUser && ['Superadmin', 'Admin'].includes(authUser.role);
 
-    const getMondayStr = (dateInput) => { if (!dateInput) return ""; const d = new Date(dateInput); if (isNaN(d.getTime())) return ""; const localDay = d.getDay() || 7; const target = new Date(d.getTime()); target.setDate(d.getDate() - localDay + 1); return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`; };
+    const getMondayStr = (dateInput) => {if (!dateInput) return ""; const d = new Date(dateInput); if (isNaN(d.getTime())) return ""; const localDay = d.getDay() || 7; const target = new Date(d.getTime()); target.setDate(d.getDate() - localDay + 1); return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`; };
     const getOffsetMondayStr = (offsetWeeks = 0) => { const d = new Date(); const day = d.getDay() || 7; d.setHours(0,0,0,0); d.setDate(d.getDate() - day + 1 + (offsetWeeks * 7)); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
     const formatToDDMMYYYY = (dateStr) => { if (!dateStr) return '-'; const d = new Date(dateStr); return isNaN(d.getTime()) ? dateStr : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; };
 
@@ -904,7 +899,11 @@ const DailyData = ({ authUser }) => {
     useEffect(() => { fetchData(); }, [authUser]);
     useEffect(() => { setCurrentPage(1); }, [activeTab, historyFilter, data.length]);
 
-    const handleOpenAdd = () => { setModalMode('add'); setFormData({ ...initialForm, recruiter: (authUser && authUser.role === 'Staff') ? authUser.username : '' }); setIsModalOpen(true); };
+    const handleOpenAdd = () => {
+        setModalMode('add');
+        setFormData({ ...initialForm, recruiter: (authUser && authUser.role === 'Staff') ? authUser.username : '' });
+        setIsModalOpen(true);
+    };
     
     const handleOpenEdit = (item) => { 
         setModalMode('edit'); 
@@ -953,9 +952,12 @@ const DailyData = ({ authUser }) => {
 
     const renderStatusBadge = (status) => {
         let colors = "bg-gray-100 text-gray-600 border-gray-200";
-        if (status === 'Acc') colors = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50";
-        if (status === 'Reject') colors = "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50";
-        if (status === 'Pending') colors = "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50";
+        if (status === 'Acc')
+            colors = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50";
+        if (status === 'Reject')
+            colors = "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50";
+        if (status === 'Pending')
+            colors = "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50";
         
         return <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border shadow-sm ${colors}`}>{status}</span>;
     };
@@ -1178,7 +1180,7 @@ const DailyData = ({ authUser }) => {
                                         </select>
                                     </div>
 
-                                    <div><Label icon="ph-user">Nama Pelamar (Username IG/Tele)</Label><input type="text" placeholder="Ketik nama panggilan/username..." required className={inputClass} value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})}/></div>
+                                    <div><Label icon="ph-user">Nama Pelamar (Username Tele)</Label><input type="text" placeholder="Ketik nama panggilan/username..." required className={inputClass} value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})}/></div>
                                     
                                     <div><Label icon="ph-hash">UID Sistem (Wajib Angka)</Label><input type="text" placeholder="Contoh: 8371928" required className={inputClass} value={formData.uid} onChange={e=>setFormData({...formData, uid: e.target.value})}/></div>
                                 </div>
@@ -1188,7 +1190,7 @@ const DailyData = ({ authUser }) => {
                                     <h4 className="font-black text-xs text-emerald-500 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700 pb-2 mb-4 flex items-center"><i className="ph-bold ph-phone-call mr-2"></i> Kontak & Penempatan</h4>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label icon="ph-whatsapp-logo">WhatsApp Pelamar</Label><input type="text" placeholder="0812..." required className={inputClass} value={formData.wa} onChange={e=>setFormData({...formData, wa: e.target.value})}/></div>
+                                        <div><Label icon="ph-whatsapp-logo">WhatsApp Pelamar</Label><input type="text" placeholder="08xxx..." required className={inputClass} value={formData.wa} onChange={e=>setFormData({...formData, wa: e.target.value})}/></div>
                                         <div><Label icon="ph-envelope-simple">Email (Opsional)</Label><input type="email" placeholder="mail@domain.com" className={inputClass} value={formData.email} onChange={e=>setFormData({...formData, email: e.target.value})}/></div>
                                     </div>
 
@@ -1719,7 +1721,7 @@ const RecruitmentGoals = ({ authUser }) => {
                     </div>
                     {isPrivileged && (
                         <div className="text-[9px] text-indigo-300 mt-3 pt-2 border-t border-white/10 text-right">
-                            *Dihitung dari total {activeStaffs.length} Staf Aktif x 21 ACC
+                            *Dihitung dari total {activeStaffs.length} Staf Aktif x 3 perhari = 21 ACC
                         </div>
                     )}
                 </div>
@@ -2892,23 +2894,20 @@ const Payroll = ({ authUser }) => {
 
 const DailyStats = ({ authUser }) => {
     // -------------------------------------------------------------
-    // STATE MANAGEMENT & LOGIC BARU
+    // STATE MANAGEMENT
     // -------------------------------------------------------------
     const [users, setUsers] = useState([]);
     const [dailyCandidates, setDailyCandidates] = useState([]);
     const [perfData, setPerfData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
-    // Tab & Filter Harian Lama
     const [activeTab, setActiveTab] = useState('input');
-    const [searchQuery, setSearchQuery] = useState('');
     const [harianDate, setHarianDate] = useState(() => {
         const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0);
         return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     });
     const [arsipOffset, setArsipOffset] = useState(-1);
 
-    // STATE BARU: Filter Tanggal Kerja (Untuk Tab Input) & Riwayat
     const [filterTanggalKerja, setFilterTanggalKerja] = useState(() => {
         const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0);
         return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -2916,7 +2915,9 @@ const DailyStats = ({ authUser }) => {
     const [riwayatBulan, setRiwayatBulan] = useState(() => new Date().toISOString().slice(0, 7));
     const [riwayatUsername, setRiwayatUsername] = useState('');
 
-    // Modal State
+    // STATE BARU: Untuk membuka/menutup daftar staf yang sudah lapor
+    const [showSelesaiInput, setShowSelesaiInput] = useState(false);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add');
     const [formData, setFormData] = useState({ 
@@ -2953,7 +2954,6 @@ const DailyStats = ({ authUser }) => {
                 const resPerf = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getPerfData' }) });
                 const dataPerf = await resPerf.json();
                 if (dataPerf.status === 'success' && dataPerf.data) {
-                    // Mapping support DB lama ke DB H+1 baru
                     const mappedData = dataPerf.data.map(d => ({
                         ...d,
                         tanggalKerja: d.tanggalKerja || d.tanggal,
@@ -2987,7 +2987,6 @@ const DailyStats = ({ authUser }) => {
         return { t0, v0, totalHarian: t0 + v0 };
     };
 
-    // Evaluasi H+1 Baru
     const evaluateH1 = (tanggalKerja, tanggalLapor, totalHarian, postingan) => {
         let dendaTelat = 0, dendaTarget = 0;
         let statusLapor = 'Aman', statusTarget = 'Sesuai Target';
@@ -3042,7 +3041,6 @@ const DailyStats = ({ authUser }) => {
                 const p = perfData.find(x => x.username === username && x.tanggalKerja === dateStr);
                 const posts = p && p.postingan ? Number(p.postingan) : 0;
                 
-                // Gunakan eval H+1
                 const evalDay = evaluateH1(dateStr, p ? p.tanggalLapor : null, t0v0.totalHarian, posts);
 
                 stats.posts += posts; stats.kunjungan += p && p.kunjungan ? Number(p.kunjungan) : 0; stats.pelamar += p && p.pelamar ? Number(p.pelamar) : 0; stats.pengujian += p && p.pengujian ? Number(p.pengujian) : 0;
@@ -3067,7 +3065,7 @@ const DailyStats = ({ authUser }) => {
             id: modalMode === 'add' ? Date.now() : formData.id, 
             tanggalKerja: formData.tanggalKerja, 
             tanggalLapor: modalMode === 'add' ? new Date().toISOString().split('T')[0] : formData.tanggalLapor,
-            tanggal: formData.tanggalKerja, // backwards compatibility
+            tanggal: formData.tanggalKerja, 
             username: formData.username, 
             postingan: parseInt(formData.postingan) || 0, kunjungan: parseInt(formData.kunjungan) || 0, pelamar: parseInt(formData.pelamar) || 0, pengujian: parseInt(formData.pengujian) || 0 
         };
@@ -3125,7 +3123,7 @@ const DailyStats = ({ authUser }) => {
     const InputClass = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all";
 
     // -------------------------------------------------------------
-    // RENDER FUNGSI KARTU KECIL (PERSIS UI ASLI)
+    // RENDER: Kartu Tabel Harian
     // -------------------------------------------------------------
     const renderHarianCard = (s) => (
         <div key={s.username} className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/60 shadow-sm flex flex-col gap-4 hover:shadow-md transition-all group">
@@ -3197,10 +3195,86 @@ const DailyStats = ({ authUser }) => {
         </div>
     );
 
+    // -------------------------------------------------------------
+    // RENDER: Helper Komponen Tab Input (Memisahkan Belum & Sudah Lapor)
+    // -------------------------------------------------------------
+    const renderInputRow = (item, isSelesai = false) => {
+        const { staff, username, p, auto, evalP } = item;
+        return (
+            <tr key={username} className={`hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors group ${evalP.dendaTelat > 0 && !p ? 'bg-rose-50/30' : ''} ${isSelesai ? 'opacity-80 hover:opacity-100 bg-gray-50/50 dark:bg-gray-900/20' : ''}`}>
+                <td className="px-5 py-4"><div className="font-black text-sm text-gray-900 dark:text-white flex items-center"><i className="ph-fill ph-user-circle mr-2 text-gray-400 text-lg"></i>{staff.name}</div><div className="text-[10px] text-gray-500 mt-1 font-bold bg-gray-100 dark:bg-gray-800 w-max px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700"><i className="ph-bold ph-at mr-1"></i>{username}</div></td>
+                <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.postingan : '-'}</td>
+                <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.kunjungan : '-'}</td>
+                <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.pelamar : '-'}</td>
+                <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.pengujian : '-'}</td>
+                <td className="px-5 py-4 text-center text-[10px] font-black"><div className="flex items-center justify-center gap-2"><span className="bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 px-2 py-1 rounded shadow-sm">T0: {auto.t0}</span><span className="bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-900/30 px-2 py-1 rounded shadow-sm">V0: {auto.v0}</span></div></td>
+                <td className="px-5 py-4 text-center">
+                    <div className="text-base font-black text-indigo-600 dark:text-indigo-400 mb-1.5">{auto.totalHarian} Leads</div>
+                    {evalP.dendaTelat > 0 && !p ? <span className="bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Telat Lapor</span> : 
+                     p ? (evalP.totalDenda > 0 ? <span className="bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Denda {evalP.totalDenda/1000}K</span> : <span className="bg-emerald-100 text-emerald-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Aman</span>) :
+                     <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Tertunda</span>}
+                </td>
+                <td className="px-5 py-4 text-right">
+                    {p ? (
+                        <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={()=>{setModalMode('edit'); setFormData(p); setIsModalOpen(true);}} className="w-8 h-8 flex items-center justify-center text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg shadow-sm transition-all"><i className="ph-bold ph-pencil-simple"></i></button>
+                            {isPrivileged && <button onClick={()=>handleDelete(p.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg shadow-sm transition-all"><i className="ph-bold ph-trash"></i></button>}
+                        </div>
+                    ) : (
+                        <button onClick={()=>{setModalMode('add'); setFormData({ id: '', tanggalKerja: filterTanggalKerja, tanggalLapor: '', username: username, postingan: '', kunjungan: '', pelamar: '', pengujian: '' }); setIsModalOpen(true);}} className="px-4 py-2 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-sm transition">Input Laporan</button>
+                    )}
+                </td>
+            </tr>
+        );
+    };
+
+    const renderInputCard = (item, isSelesai = false) => {
+        const { staff, username, p, auto, evalP } = item;
+        return (
+            <div key={username} className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative ${isSelesai ? 'opacity-80 border-dashed bg-gray-50/50 dark:bg-gray-900/20' : ''}`}>
+                {evalP.dendaTelat > 0 && !p && <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-widest animate-pulse">Terlambat</span>}
+                <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <div className="font-black text-sm text-gray-900 dark:text-white flex items-center gap-1.5"><i className="ph-fill ph-user-circle text-gray-400 text-lg"></i>{staff.name}</div>
+                        <div className="text-[10px] text-gray-500 mt-1 font-bold bg-gray-100 dark:bg-gray-700 w-max px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">@{username}</div>
+                    </div>
+                    {p && (
+                        <div className="flex gap-2">
+                            <button onClick={()=>{setModalMode('edit'); setFormData(p); setIsModalOpen(true);}} className="w-8 h-8 flex items-center justify-center text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg"><i className="ph-bold ph-pencil-simple text-lg"></i></button>
+                            {isPrivileged && <button onClick={()=>handleDelete(p.id)} className="w-8 h-8 flex items-center justify-center text-rose-500 bg-rose-50 dark:bg-rose-900/30 rounded-lg"><i className="ph-bold ph-trash text-lg"></i></button>}
+                        </div>
+                    )}
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-xl border border-gray-100 dark:border-gray-700/50 text-center">
+                    <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Posts</div><div className="font-black text-sm">{p ? p.postingan : '-'}</div></div>
+                    <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Kunj</div><div className="font-black text-sm">{p ? p.kunjungan : '-'}</div></div>
+                    <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Plmr</div><div className="font-black text-sm">{p ? p.pelamar : '-'}</div></div>
+                    <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Uji</div><div className="font-black text-sm">{p ? p.pengujian : '-'}</div></div>
+                </div>
+                
+                <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50 pt-3">
+                    <div className="flex gap-1">
+                        <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-black border border-emerald-100">T0: {auto.t0}</span>
+                        <span className="bg-purple-50 text-purple-600 px-2 py-1 rounded text-[10px] font-black border border-purple-100">V0: {auto.v0}</span>
+                    </div>
+                    {!p ? (
+                        <button onClick={()=>{setModalMode('add'); setFormData({ id: '', tanggalKerja: filterTanggalKerja, tanggalLapor: '', username: username, postingan: '', kunjungan: '', pelamar: '', pengujian: '' }); setIsModalOpen(true);}} className="px-3 py-1.5 bg-indigo-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm">Input</button>
+                    ) : (
+                        <div className="text-right">
+                            <div className="text-xs font-black text-indigo-600 dark:text-indigo-400">{auto.totalHarian} Leads</div>
+                            {evalP.totalDenda > 0 ? <span className="text-[9px] font-black text-rose-600">Denda {evalP.totalDenda/1000}K</span> : <span className="text-[9px] font-black text-emerald-600">Aman</span>}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-12">
             
-            {/* 1. KARTU KPI UTAMA (Responsive Grid) - PERSIS ASLI */}
+            {/* 1. KARTU KPI UTAMA */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 {[ 
                     { l:'Total Posts', v: totalWeekly.posts, i:'ph-file-text', c:'blue', grad:'from-blue-500 to-indigo-600' }, 
@@ -3231,7 +3305,7 @@ const DailyStats = ({ authUser }) => {
                 ))}
             </div>
 
-            {/* 2. TOP PERFORMERS BANNER - PERSIS ASLI */}
+            {/* 2. TOP PERFORMERS BANNER */}
             <div className="bg-gradient-to-br from-[#1e1b4b] via-indigo-900 to-purple-900 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-white border border-indigo-500/30">
                 <i className="ph-fill ph-ranking absolute -right-10 -bottom-10 text-[180px] sm:text-[250px] opacity-10 pointer-events-none transform -rotate-12"></i>
                 <h3 className="font-black text-lg sm:text-xl mb-6 flex items-center relative z-10">
@@ -3272,7 +3346,7 @@ const DailyStats = ({ authUser }) => {
                 </div>
             </div>
 
-            {/* 3. TABS NAVIGASI & AKSI - PERSIS ASLI (Ditambah Tab Riwayat) */}
+            {/* 3. TABS NAVIGASI & AKSI */}
             <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl overflow-hidden flex flex-col">
                 <div className="flex border-b border-gray-200 dark:border-gray-700/50 bg-gray-50/80 dark:bg-gray-900/30 overflow-x-auto hide-scrollbar snap-x">
                     <button onClick={() => setActiveTab('input')} className={`px-5 sm:px-6 py-4 font-black text-xs sm:text-sm flex items-center whitespace-nowrap transition-all duration-300 border-b-[3px] snap-center ${activeTab === 'input' ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-800' : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}>
@@ -3344,111 +3418,107 @@ const DailyStats = ({ authUser }) => {
                     </div>
                 </div>
 
-                {/* AREA KONTEN */}
+                {/* AREA KONTEN (Tabel / Kartu HP) */}
                 <div className="bg-white dark:bg-gray-800 min-h-[400px]">
                     
-                    {/* TAB: INPUT DATA (Menggunakan Desain Tabel Asli, namun untuk 1 tanggal kerja) */}
-                    {activeTab === 'input' && (
-                        <div>
-                            {/* Desktop View */}
-                            <div className="hidden md:block overflow-x-auto custom-scrollbar">
-                                <table className="w-full text-left whitespace-nowrap min-w-[800px]">
-                                    <thead className="bg-gray-50/80 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
-                                        <tr><th className="px-5 py-4">Informasi Staf</th><th className="px-5 py-4 text-center">Postingan</th><th className="px-5 py-4 text-center">Visitor</th><th className="px-5 py-4 text-center">Pelamar</th><th className="px-5 py-4 text-center">Diuji</th><th className="px-5 py-4 text-center">Auto (T0/V0)</th><th className="px-5 py-4 text-center">Total & Status</th><th className="px-5 py-4 text-right">Tindakan</th></tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-                                        {isLoading ? [...Array(3)].map((_,i)=><tr key={i}><td colSpan="8" className="px-5 py-6"><div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md w-full"></div></td></tr>) : 
-                                         viewableStaffList.map((staff, i) => {
-                                            const username = staff.username || staff.name;
-                                            const p = perfData.find(x => x.username === username && x.tanggalKerja === filterTanggalKerja);
-                                            const auto = computeT0V0(username, filterTanggalKerja); 
-                                            const evalP = evaluateH1(filterTanggalKerja, p ? p.tanggalLapor : null, auto.totalHarian, p ? p.postingan : 0);
-                                            
-                                            return (
-                                                <tr key={i} className={`hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors group ${evalP.dendaTelat > 0 && !p ? 'bg-rose-50/30' : ''}`}>
-                                                    <td className="px-5 py-4"><div className="font-black text-sm text-gray-900 dark:text-white flex items-center"><i className="ph-fill ph-user-circle mr-2 text-gray-400 text-lg"></i>{staff.name}</div><div className="text-[10px] text-gray-500 mt-1 font-bold bg-gray-100 dark:bg-gray-800 w-max px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700"><i className="ph-bold ph-at mr-1"></i>{username}</div></td>
-                                                    <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.postingan : '-'}</td>
-                                                    <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.kunjungan : '-'}</td>
-                                                    <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.pelamar : '-'}</td>
-                                                    <td className="px-5 py-4 text-center font-black text-sm text-gray-700 dark:text-gray-300">{p ? p.pengujian : '-'}</td>
-                                                    <td className="px-5 py-4 text-center text-[10px] font-black"><div className="flex items-center justify-center gap-2"><span className="bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 px-2 py-1 rounded shadow-sm">T0: {auto.t0}</span><span className="bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-900/30 px-2 py-1 rounded shadow-sm">V0: {auto.v0}</span></div></td>
-                                                    <td className="px-5 py-4 text-center">
-                                                        <div className="text-base font-black text-indigo-600 dark:text-indigo-400 mb-1.5">{auto.totalHarian} Leads</div>
-                                                        {evalP.dendaTelat > 0 && !p ? <span className="bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Telat Lapor</span> : 
-                                                         p ? (evalP.totalDenda > 0 ? <span className="bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Denda {evalP.totalDenda/1000}K</span> : <span className="bg-emerald-100 text-emerald-600 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Aman</span>) :
-                                                         <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shadow-sm">Kosong</span>}
-                                                    </td>
-                                                    <td className="px-5 py-4 text-right">
-                                                        {p ? (
-                                                            <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={()=>{setModalMode('edit'); setFormData(p); setIsModalOpen(true);}} className="w-8 h-8 flex items-center justify-center text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg shadow-sm transition-all"><i className="ph-bold ph-pencil-simple"></i></button>
-                                                                {isPrivileged && <button onClick={()=>handleDelete(p.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg shadow-sm transition-all"><i className="ph-bold ph-trash"></i></button>}
-                                                            </div>
-                                                        ) : (
-                                                            <button onClick={()=>{setModalMode('add'); setFormData({ id: '', tanggalKerja: filterTanggalKerja, tanggalLapor: '', username: username, postingan: '', kunjungan: '', pelamar: '', pengujian: '' }); setIsModalOpen(true);}} className="px-4 py-2 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-sm transition">Input Laporan</button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            {/* Mobile View */}
-                            <div className="md:hidden p-4 space-y-4 bg-gray-50/50 dark:bg-gray-900/30">
-                                {isLoading ? <div className="flex justify-center p-6"><i className="ph-bold ph-spinner ph-spin text-3xl text-indigo-500"></i></div> :
-                                 viewableStaffList.map((staff, i) => {
-                                    const username = staff.username || staff.name;
-                                    const p = perfData.find(x => x.username === username && x.tanggalKerja === filterTanggalKerja);
-                                    const auto = computeT0V0(username, filterTanggalKerja); 
-                                    const evalP = evaluateH1(filterTanggalKerja, p ? p.tanggalLapor : null, auto.totalHarian, p ? p.postingan : 0);
+                    {/* TAB: INPUT DATA DENGAN KONSEP INBOX ZERO */}
+                    {activeTab === 'input' && (() => {
+                        const inputItems = viewableStaffList.map(staff => {
+                            const username = staff.username || staff.name;
+                            const p = perfData.find(x => x.username === username && x.tanggalKerja === filterTanggalKerja);
+                            const auto = computeT0V0(username, filterTanggalKerja); 
+                            const evalP = evaluateH1(filterTanggalKerja, p ? p.tanggalLapor : null, auto.totalHarian, p ? p.postingan : 0);
+                            return { staff, username, p, auto, evalP };
+                        });
+                    
+                        const belumInput = inputItems.filter(item => !item.p);
+                        const sudahInput = inputItems.filter(item => !!item.p);
 
-                                    return (
-                                        <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative">
-                                            {evalP.dendaTelat > 0 && !p && <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-widest animate-pulse">Terlambat</span>}
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <div className="font-black text-sm text-gray-900 dark:text-white flex items-center gap-1.5"><i className="ph-fill ph-user-circle text-gray-400 text-lg"></i>{staff.name}</div>
-                                                    <div className="text-[10px] text-gray-500 mt-1 font-bold bg-gray-100 dark:bg-gray-700 w-max px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">@{username}</div>
-                                                </div>
-                                                {p && (
-                                                    <div className="flex gap-2">
-                                                        <button onClick={()=>{setModalMode('edit'); setFormData(p); setIsModalOpen(true);}} className="w-8 h-8 flex items-center justify-center text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg"><i className="ph-bold ph-pencil-simple text-lg"></i></button>
-                                                        {isPrivileged && <button onClick={()=>handleDelete(p.id)} className="w-8 h-8 flex items-center justify-center text-rose-500 bg-rose-50 dark:bg-rose-900/30 rounded-lg"><i className="ph-bold ph-trash text-lg"></i></button>}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-4 gap-2 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-xl border border-gray-100 dark:border-gray-700/50 text-center">
-                                                <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Posts</div><div className="font-black text-sm">{p ? p.postingan : '-'}</div></div>
-                                                <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Kunj</div><div className="font-black text-sm">{p ? p.kunjungan : '-'}</div></div>
-                                                <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Plmr</div><div className="font-black text-sm">{p ? p.pelamar : '-'}</div></div>
-                                                <div><div className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">Uji</div><div className="font-black text-sm">{p ? p.pengujian : '-'}</div></div>
-                                            </div>
-                                            
-                                            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50 pt-3">
-                                                <div className="flex gap-1">
-                                                    <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-black border border-emerald-100">T0: {auto.t0}</span>
-                                                    <span className="bg-purple-50 text-purple-600 px-2 py-1 rounded text-[10px] font-black border border-purple-100">V0: {auto.v0}</span>
-                                                </div>
-                                                {!p ? (
-                                                    <button onClick={()=>{setModalMode('add'); setFormData({ id: '', tanggalKerja: filterTanggalKerja, tanggalLapor: '', username: username, postingan: '', kunjungan: '', pelamar: '', pengujian: '' }); setIsModalOpen(true);}} className="px-3 py-1.5 bg-indigo-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm">Input</button>
-                                                ) : (
-                                                    <div className="text-right">
-                                                        <div className="text-xs font-black text-indigo-600 dark:text-indigo-400">{auto.totalHarian} Leads</div>
-                                                        {evalP.totalDenda > 0 ? <span className="text-[9px] font-black text-rose-600">Denda {evalP.totalDenda/1000}K</span> : <span className="text-[9px] font-black text-emerald-600">Aman</span>}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
+                        return (
+                            <div>
+                                {/* Desktop View */}
+                                <div className="hidden md:block overflow-x-auto custom-scrollbar">
+                                    <table className="w-full text-left whitespace-nowrap min-w-[800px]">
+                                        <thead className="bg-gray-50/80 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
+                                            <tr><th className="px-5 py-4">Informasi Staf</th><th className="px-5 py-4 text-center">Postingan</th><th className="px-5 py-4 text-center">Visitor</th><th className="px-5 py-4 text-center">Pelamar</th><th className="px-5 py-4 text-center">Diuji</th><th className="px-5 py-4 text-center">Auto (T0/V0)</th><th className="px-5 py-4 text-center">Total & Status</th><th className="px-5 py-4 text-right">Tindakan</th></tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                                            {isLoading ? [...Array(3)].map((_,i)=><tr key={i}><td colSpan="8" className="px-5 py-6"><div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md w-full"></div></td></tr>) : 
+                                            inputItems.length === 0 ? <tr><td colSpan="8" className="text-center py-16 text-gray-400 font-bold"><i className="ph-fill ph-folder-open text-5xl mb-2 opacity-50 block"></i>Belum ada data staf.</td></tr> :
+                                            (
+                                                <>
+                                                    {/* Kondisi Jika Semua Selesai */}
+                                                    {belumInput.length === 0 && sudahInput.length > 0 && (
+                                                        <tr>
+                                                            <td colSpan="8" className="text-center py-12">
+                                                                <div className="inline-flex flex-col items-center justify-center bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 px-8 py-5 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
+                                                                    <i className="ph-fill ph-check-circle text-5xl mb-3 drop-shadow-sm"></i>
+                                                                    <span className="font-black text-lg">Semua Laporan Selesai! 🎉</span>
+                                                                    <span className="text-xs font-bold mt-1 opacity-80">Tidak ada lagi input yang tertunda untuk tanggal ini.</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
 
-                    {/* TAB: REKAP HARIAN - PERSIS ASLI */}
+                                                    {/* Render Staf Yang Belum Input */}
+                                                    {belumInput.map(item => renderInputRow(item, false))}
+
+                                                    {/* Toggle Accordion Untuk Staf Yang Sudah Selesai */}
+                                                    {sudahInput.length > 0 && (
+                                                        <tr>
+                                                            <td colSpan="8" className="bg-gray-50/80 dark:bg-gray-900/50 p-0 border-y border-gray-200 dark:border-gray-700">
+                                                                <button onClick={() => setShowSelesaiInput(!showSelesaiInput)} className="w-full px-5 py-3.5 flex items-center justify-between text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors outline-none focus:bg-gray-100 dark:focus:bg-gray-800">
+                                                                    <div className="font-black text-[10px] uppercase tracking-widest flex items-center"><i className="ph-fill ph-check-square-offset text-emerald-500 mr-2 text-lg"></i> Laporan Selesai & Bisa Diedit ({sudahInput.length} Orang)</div>
+                                                                    <div className="flex items-center gap-2"><span className="text-[10px] font-bold opacity-50">{showSelesaiInput ? 'Tutup' : 'Lihat'}</span><i className={`ph-bold ph-caret-${showSelesaiInput ? 'up' : 'down'} text-lg`}></i></div>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+
+                                                    {/* Render Staf Yang Sudah Input (Hanya jika Accordion Terbuka) */}
+                                                    {showSelesaiInput && sudahInput.map(item => renderInputRow(item, true))}
+                                                </>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {/* Mobile View */}
+                                <div className="md:hidden p-4 space-y-4 bg-gray-50/50 dark:bg-gray-900/30">
+                                    {isLoading ? <div className="flex justify-center p-6"><i className="ph-bold ph-spinner ph-spin text-3xl text-indigo-500"></i></div> :
+                                    inputItems.length === 0 ? <div className="text-center py-10 text-gray-400 font-bold"><i className="ph-fill ph-folder-open text-4xl mb-2 opacity-50 block"></i>Kosong</div> :
+                                    (
+                                        <>
+                                            {/* Kondisi Jika Semua Selesai */}
+                                            {belumInput.length === 0 && sudahInput.length > 0 && (
+                                                <div className="text-center py-10 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-800/30 flex flex-col items-center">
+                                                    <i className="ph-fill ph-check-circle text-5xl text-emerald-500 mb-2 drop-shadow-sm"></i>
+                                                    <p className="font-black text-emerald-700 dark:text-emerald-400 text-lg">Semua Selesai! 🎉</p>
+                                                    <p className="text-xs font-bold text-emerald-600/70 mt-1">Laporan harian tuntas.</p>
+                                                </div>
+                                            )}
+
+                                            {/* Render Staf Yang Belum Input */}
+                                            {belumInput.map(item => renderInputCard(item, false))}
+
+                                            {/* Toggle Accordion Mobile Untuk Staf Yang Sudah Selesai */}
+                                            {sudahInput.length > 0 && (
+                                                <button onClick={() => setShowSelesaiInput(!showSelesaiInput)} className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex justify-between items-center text-sm font-black text-gray-600 dark:text-gray-300 shadow-sm active:scale-95 transition-transform outline-none">
+                                                    <span className="flex items-center text-xs uppercase tracking-widest"><i className="ph-fill ph-check-square-offset text-emerald-500 mr-2 text-xl"></i> Sudah Lapor ({sudahInput.length})</span>
+                                                    <i className={`ph-bold ph-caret-${showSelesaiInput ? 'up' : 'down'} text-xl`}></i>
+                                                </button>
+                                            )}
+
+                                            {/* Render Staf Yang Sudah Input (Hanya jika Accordion Terbuka) */}
+                                            {showSelesaiInput && <div className="space-y-4 pt-2 border-t border-gray-200 border-dashed dark:border-gray-700">{sudahInput.map(item => renderInputCard(item, true))}</div>}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })()}
+
+                    {/* TAB: REKAP HARIAN */}
                     {activeTab === 'harian' && (
                         <div className="p-4 sm:p-6 lg:p-8 bg-gray-50/30 dark:bg-gray-900/20">
                             <h2 className="hidden print:block text-2xl font-black mb-6 text-center border-b pb-4">Rekap Harian - {formatToDDMMYYYY(harianDate)}</h2>
@@ -3471,7 +3541,7 @@ const DailyStats = ({ authUser }) => {
                         </div>
                     )}
 
-                    {/* TAB: REKAP MINGGUAN - PERSIS ASLI */}
+                    {/* TAB: REKAP MINGGUAN */}
                     {activeTab === 'mingguan' && (
                         <div>
                             {/* Desktop View */}
@@ -3512,7 +3582,7 @@ const DailyStats = ({ authUser }) => {
                         </div>
                     )}
 
-                    {/* TAB: ARSIP MINGGUAN - PERSIS ASLI */}
+                    {/* TAB: ARSIP MINGGUAN */}
                     {activeTab === 'arsip' && isPrivileged && (
                         <div>
                             {/* Desktop View */}
@@ -3554,7 +3624,7 @@ const DailyStats = ({ authUser }) => {
                         </div>
                     )}
 
-                    {/* TAB: RIWAYAT SEMUA LAPORAN (Sesuai Tabel Original) */}
+                    {/* TAB: RIWAYAT SEMUA LAPORAN */}
                     {activeTab === 'riwayat' && (
                         <div>
                             <div className="hidden md:block overflow-x-auto custom-scrollbar">
@@ -3629,7 +3699,7 @@ const DailyStats = ({ authUser }) => {
                 </div>
             </div>
 
-            {/* MODAL INPUT/EDIT - PERSIS ASLI */}
+            {/* MODAL INPUT/EDIT */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
                     <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm" onClick={()=>setIsModalOpen(false)}></div>
@@ -3698,7 +3768,6 @@ const DailyStats = ({ authUser }) => {
         </div>
     );
 };
-
 
 const UserManagement = ({ authUser }) => {
     const [users, setUsers] = useState([]);
@@ -4128,8 +4197,71 @@ const UserManagement = ({ authUser }) => {
     );
 };
 
+const InstallPWA = () => {
+    const [supportsPWA, setSupportsPWA] = useState(false);
+    const [promptInstall, setPromptInstall] = useState(null);
+
+    useEffect(() => {
+        const handler = e => {
+            // Mencegah pop-up bawaan browser muncul secara otomatis
+            e.preventDefault();
+            setSupportsPWA(true);
+            setPromptInstall(e);
+        };
+
+        window.addEventListener("beforeinstallprompt", handler);
+
+        return () => window.removeEventListener("beforeinstallprompt", handler);
+    }, []);
+
+    const handleInstall = async (e) => {
+        e.preventDefault();
+        if (!promptInstall) return;
+
+        // Munculkan pop-up instalasi bawaan sistem operasi
+        promptInstall.prompt();
+
+        // Tunggu respon pengguna (Accept / Cancel)
+        const { outcome } = await promptInstall.userChoice;
+        if (outcome === 'accepted') {
+            setSupportsPWA(false); // Sembunyikan tombol setelah berhasil diinstal
+        }
+    };
+
+    // Jangan tampilkan tombol jika perangkat tidak mendukung atau app sudah diinstal
+    if (!supportsPWA) return null;
+
+    return (
+        <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center text-indigo-600 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <i className="ph-fill ph-app-window text-xl"></i>
+                </div>
+                <div>
+                    <h4 className="font-bold text-sm text-gray-900 dark:text-white">Install RecruitOps</h4>
+                    <p className="text-[10px] text-gray-500">Akses lebih cepat langsung dari layar utama Anda.</p>
+                </div>
+            </div>
+            <button 
+                onClick={handleInstall} 
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-md transition-all active:scale-95"
+            >
+                Install App
+            </button>
+        </div>
+    );
+};
+
+
 const App = () => {
-    const [authUser, setAuthUser] = useState(() => { try { const saved = localStorage.getItem('recruitOps_session'); return saved ? JSON.parse(saved) : null; } catch (error) { return null; } });
+    const [authUser, setAuthUser] = useState(() => {
+        try {
+            const saved = localStorage.getItem('recruitOps_session');
+            return saved ? JSON.parse(saved) : null;
+        } catch (error) {
+            return null;
+        }
+    });
     const [authView, setAuthView] = useState('login');
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -4138,41 +4270,56 @@ const App = () => {
     const [isCheckingSession, setIsCheckingSession] = useState(true);
     const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
 
-    useEffect(() => { const handleResize = () => setIsMobile(window.innerWidth < 768); window.addEventListener('resize', handleResize); setTimeout(() => setIsCheckingSession(false), 300); return () => window.removeEventListener('resize', handleResize); }, []);
-    
-    useEffect(() => { if (isDark) { document.documentElement.classList.add('dark'); localStorage.setItem('recruitOps_theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('recruitOps_theme', 'light'); } }, [isDark]);
-
-    useEffect(() => { if (authUser) setActiveTab(authUser.role === 'Staff' ? 'daily_stats' : 'dashboard'); }, [authUser]);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        setTimeout(() => setIsCheckingSession(false), 300);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     useEffect(() => {
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('recruitOps_theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('recruitOps_theme', 'light');
+        }
+    }, [isDark]);
 
-    const changeTab = (tab) => () => setActiveTab(tab);
-
-    const listeners = {
-        openDashboard: changeTab("dashboard"),
-        openAnnouncement: changeTab("announcement"),
-        openFollowUp: changeTab("follow_up"),
-        openPerformance: changeTab("performance"),
-        openGoals: changeTab("goals"),
-        openChannels: changeTab("channels"),
-        openDailyData: changeTab("daily_data"),
-        openDailyStats: changeTab("daily_stats"),
-        openPayroll: changeTab("payroll"),
-        openUsers: changeTab("users"),
-        openSettings: changeTab("settings")
-    };
-
-    Object.entries(listeners).forEach(([event, handler]) => {
-        window.addEventListener(event, handler);
-    });
-
-    return () => {
+    useEffect(() => {
+        if (authUser)
+            setActiveTab(authUser.role === 'Staff' ? 'daily_stats' : 'dashboard');
+        }, [authUser]);
+    
+    useEffect(() => {
+        const changeTab = (tab) => () => setActiveTab(tab);
+        
+        const listeners = {
+            openDashboard: changeTab("dashboard"),
+            openAnnouncement: changeTab("announcement"),
+            openFollowUp: changeTab("follow_up"),
+            openPerformance: changeTab("performance"),
+            openGoals: changeTab("goals"),
+            openChannels: changeTab("channels"),
+            openDailyData: changeTab("daily_data"),
+            openDailyStats: changeTab("daily_stats"),
+            openPayroll: changeTab("payroll"),
+            openUsers: changeTab("users"),
+            openSettings: changeTab("settings")
+        };
+        
         Object.entries(listeners).forEach(([event, handler]) => {
-            window.removeEventListener(event, handler);
+            window.addEventListener(event, handler);
         });
-    };
+        
+        return () => {
+            Object.entries(listeners).forEach(([event, handler]) => {
+                window.removeEventListener(event, handler);
+            });
+        };
+    }, []);
 
-}, []);
     // =========================================================================
     // LOGIKA NOTIFIKASI BARU: SINKRON DENGAN PESAN YANG SUDAH DIBACA
     // =========================================================================
@@ -4254,6 +4401,7 @@ const App = () => {
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
+            <InstallPWA />
             <div className="flex flex-1 overflow-hidden relative">
                 
                 {/* Mobile Sidebar Overlay */}
