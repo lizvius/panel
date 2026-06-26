@@ -921,7 +921,9 @@ const DailyData = ({ authUser }) => {
         catch (error) { alert("Terjadi kesalahan koneksi."); }
     };
 
-    const handleDelete = async (id) => { 
+    const handleDelete = async (id, e) => {
+        // e.stopPropagation mencegah bentrok saat di-tap di HP
+        if (e) e.stopPropagation(); 
         if (!window.confirm("Yakin ingin menghapus data pelamar ini?")) return; 
         try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteDailyData', id }) }); fetchData(); } 
         catch (error) { alert("Terjadi kesalahan saat menghapus."); } 
@@ -934,7 +936,7 @@ const DailyData = ({ authUser }) => {
         else return historyFilter === 'all' ? itemMonday < thisWeekMonday : itemMonday === getOffsetMondayStr(historyFilter);
     });
 
-    // Kalkulasi Statistik Mini untuk Data yang Ditampilkan
+    // Kalkulasi Statistik Mini
     const statTotal = currentDisplayData.length;
     const statPending = currentDisplayData.filter(d => d.results === 'Pending').length;
     const statAcc = currentDisplayData.filter(d => d.results === 'Acc').length;
@@ -945,11 +947,10 @@ const DailyData = ({ authUser }) => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedData = currentDisplayData.slice(startIndex, startIndex + itemsPerPage);
 
-    // CSS Utilities
-    const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all";
+    // CSS Utilities (Padding diperbesar untuk Tablet/Android)
+    const inputClass = "w-full px-4 py-3 sm:py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all";
     const Label = ({children, icon}) => <label className="flex items-center text-[10px] font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest"><i className={`ph-bold ${icon} mr-1.5 text-indigo-500`}></i> {children}</label>;
 
-    // Fungsi Render Badge Status (Tanpa perlu komponen eksternal)
     const renderStatusBadge = (status) => {
         let colors = "bg-gray-100 text-gray-600 border-gray-200";
         if (status === 'Acc') colors = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50";
@@ -964,25 +965,23 @@ const DailyData = ({ authUser }) => {
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6 bg-white/60 dark:bg-gray-800/60 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-md shadow-sm">
                 
-                {/* Custom Segmented Control (Pill Tabs) */}
                 <div className="flex bg-gray-100/80 dark:bg-gray-900/50 p-1.5 rounded-xl w-full md:w-auto border border-gray-200/50 dark:border-gray-700/50 shadow-inner">
-                    <button onClick={() => setActiveTab('thisWeek')} className={`flex-1 md:flex-none px-4 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-black transition-all ${activeTab === 'thisWeek' ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-700' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
+                    <button onClick={() => setActiveTab('thisWeek')} className={`flex-1 md:flex-none px-4 sm:px-6 py-3 sm:py-2.5 rounded-lg text-xs sm:text-sm font-black transition-all ${activeTab === 'thisWeek' ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-gray-200 dark:border-gray-700' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
                         Minggu Ini
                     </button>
-                    <button onClick={() => setActiveTab('lastWeek')} className={`flex-1 md:flex-none px-4 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-black transition-all flex items-center justify-center ${activeTab === 'lastWeek' ? 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 shadow-sm border border-gray-200 dark:border-gray-700' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
+                    <button onClick={() => setActiveTab('lastWeek')} className={`flex-1 md:flex-none px-4 sm:px-6 py-3 sm:py-2.5 rounded-lg text-xs sm:text-sm font-black transition-all flex items-center justify-center ${activeTab === 'lastWeek' ? 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 shadow-sm border border-gray-200 dark:border-gray-700' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
                         Pemeriksaan 
                         {isThursday && <span className="flex w-2 h-2 ml-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span>}
                     </button>
                 </div>
 
                 {isPrivileged && (
-                    <button onClick={handleOpenAdd} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all transform hover:-translate-y-0.5">
+                    <button onClick={handleOpenAdd} className="w-full md:w-auto px-6 py-3.5 md:py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all transform hover:-translate-y-0.5">
                         <i className="ph-bold ph-plus text-lg mr-2"></i> Tambah Data
                     </button>
                 )}
             </div>
 
-            {/* Mini Dashboard Statistik */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[ 
                     { l: 'Total Data', v: statTotal, c: 'blue', i: 'ph-files' }, 
@@ -1002,10 +1001,8 @@ const DailyData = ({ authUser }) => {
                 ))}
             </div>
 
-            {/* Area Tabel Utama */}
             <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden relative">
                 
-                {/* Header Area Tabel */}
                 <div className={`p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 ${activeTab === 'lastWeek' && isThursday ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'bg-gray-50/50 dark:bg-gray-800/30'}`}>
                     <div>
                         <h3 className="font-black text-base sm:text-lg flex items-center text-gray-800 dark:text-white">
@@ -1023,7 +1020,7 @@ const DailyData = ({ authUser }) => {
                     {activeTab === 'lastWeek' && (
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-white dark:bg-gray-900 p-2 sm:p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
                             <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest pl-2">Filter Riwayat:</label>
-                            <select value={historyFilter} onChange={(e) => setHistoryFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="w-full sm:w-auto bg-gray-50 dark:bg-gray-800 border-none rounded-lg px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none text-gray-700 dark:text-gray-200 cursor-pointer">
+                            <select value={historyFilter} onChange={(e) => setHistoryFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="w-full sm:w-auto bg-gray-50 dark:bg-gray-800 border-none rounded-lg px-3 py-3 sm:py-2 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none text-gray-700 dark:text-gray-200 cursor-pointer">
                                 <option value={-1}>1 Minggu Lalu (Krusial)</option>
                                 <option value={-2}>2 Minggu Lalu</option>
                                 <option value={-3}>3 Minggu Lalu</option>
@@ -1033,7 +1030,6 @@ const DailyData = ({ authUser }) => {
                     )}
                 </div>
 
-                {/* Konten Tabel */}
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                         <i className="ph-bold ph-spinner ph-spin text-4xl mb-3 text-indigo-500"></i>
@@ -1062,7 +1058,6 @@ const DailyData = ({ authUser }) => {
                                 ) : paginatedData.map((d, i) => (
                                     <tr key={i} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors group">
                                         
-                                        {/* Kolom 1: Profil */}
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center text-gray-500 border border-gray-300 dark:border-gray-600 shrink-0">
@@ -1075,13 +1070,11 @@ const DailyData = ({ authUser }) => {
                                                     </div>
                                                     <div className="flex gap-1.5 mt-1.5">
                                                         <span className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded text-[9px] font-mono text-gray-500">UID: {d.uid}</span>
-                                                        <span className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded text-[9px] font-mono text-gray-500">ID: {d.pelamarId || d.id}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
 
-                                        {/* Kolom 2: Kontak */}
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="font-bold text-xs text-gray-700 dark:text-gray-300 flex items-center mb-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded w-max border border-emerald-100 dark:border-emerald-800/30">
                                                 <i className="ph-bold ph-whatsapp-logo text-emerald-500 mr-1.5 text-sm"></i> {d.wa}
@@ -1091,7 +1084,6 @@ const DailyData = ({ authUser }) => {
                                             </div>
                                         </td>
 
-                                        {/* Kolom 3: Recruiter */}
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="font-black text-xs text-indigo-600 dark:text-indigo-400 flex items-center mb-1">
                                                 <i className="ph-fill ph-identification-card mr-1.5 text-sm"></i> {d.recruiter || 'Unknown'}
@@ -1101,7 +1093,6 @@ const DailyData = ({ authUser }) => {
                                             </div>
                                         </td>
 
-                                        {/* Kolom 4: Status */}
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="mb-2">{renderStatusBadge(d.results)}</div>
                                             <div className="text-[9px] text-gray-500 font-black flex items-center">
@@ -1109,15 +1100,14 @@ const DailyData = ({ authUser }) => {
                                             </div>
                                         </td>
 
-                                        {/* Kolom 5: Aksi */}
                                         {isPrivileged && (
                                             <td className="px-4 sm:px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <button onClick={() => handleOpenEdit(d)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all shadow-sm">
-                                                        <i className="ph-bold ph-pencil-simple"></i>
+                                                    <button type="button" onClick={(e) => { e.stopPropagation(); handleOpenEdit(d); }} className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all shadow-sm">
+                                                        <i className="ph-bold ph-pencil-simple text-lg sm:text-base"></i>
                                                     </button>
-                                                    <button onClick={() => handleDelete(d.id)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-all shadow-sm">
-                                                        <i className="ph-bold ph-trash"></i>
+                                                    <button type="button" onClick={(e) => handleDelete(d.id, e)} className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-all shadow-sm">
+                                                        <i className="ph-bold ph-trash text-lg sm:text-base"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -1136,13 +1126,13 @@ const DailyData = ({ authUser }) => {
                             Menampilkan <span className="text-indigo-600 dark:text-indigo-400">{startIndex + 1}</span> - <span className="text-indigo-600 dark:text-indigo-400">{Math.min(startIndex + itemsPerPage, currentDisplayData.length)}</span> dari <span className="text-gray-900 dark:text-white">{currentDisplayData.length}</span> entri
                         </div>
                         <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700 transition-colors flex items-center shadow-sm">
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="flex-1 sm:flex-none justify-center px-4 py-3 sm:px-3 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700 transition-colors flex items-center shadow-sm">
                                 <i className="ph-bold ph-caret-left mr-1"></i> Prev
                             </button>
-                            <span className="text-xs font-bold px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 shadow-sm">
+                            <span className="text-xs font-bold px-4 py-3 sm:px-3 sm:py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 shadow-sm">
                                 Hal {currentPage} / {totalPages}
                             </span>
-                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700 transition-colors flex items-center shadow-sm">
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="flex-1 sm:flex-none justify-center px-4 py-3 sm:px-3 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700 transition-colors flex items-center shadow-sm">
                                 Next <i className="ph-bold ph-caret-right ml-1"></i>
                             </button>
                         </div>
@@ -1150,27 +1140,27 @@ const DailyData = ({ authUser }) => {
                 )}
             </div>
 
-            {/* MODAL INPUT / EDIT RESPONSIVE */}
+            {/* MODAL INPUT / EDIT RESPONSIVE YANG DIPERBAIKI (TIDAK NGEFRAME) */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
-                    <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col relative z-10 animate-in zoom-in-95 duration-200 border-t-4 border-t-indigo-500">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-gray-900/80 backdrop-blur-sm">
+                    {/* Pembungkus Form dipindahkan ke paling luar agar Modal Body bisa di-scroll terpisah dari Header & Footer */}
+                    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col sm:rounded-3xl shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 sm:border-t-4 sm:border-t-indigo-500">
                         
-                        {/* Header Modal */}
-                        <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/50">
+                        {/* Header Modal - Terkunci (Sticky) */}
+                        <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/50 shrink-0">
                             <h2 className="font-black text-lg sm:text-xl flex items-center text-gray-900 dark:text-white">
                                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3">
                                     <i className={`ph-bold ${modalMode === 'add' ? 'ph-plus' : 'ph-pencil-simple'} text-xl`}></i>
                                 </div>
-                                {modalMode === 'add' ? 'Input Data Baru' : 'Edit Formulir Pelamar'}
+                                {modalMode === 'add' ? 'Input Data Baru' : 'Edit Formulir'}
                             </h2>
-                            <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-rose-100 hover:text-rose-600 text-gray-400 transition-colors bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                            <button type="button" onClick={() => setIsModalOpen(false)} className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-rose-100 hover:text-rose-600 text-gray-400 transition-colors bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                                 <i className="ph-bold ph-x text-lg"></i>
                             </button>
                         </div>
 
-                        {/* Form Body (2 Kolom di Tablet/Laptop, 1 Kolom di HP) */}
-                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8 overflow-y-auto max-h-[80vh] custom-scrollbar bg-gray-50/30 dark:bg-gray-900/30">
+                        {/* Body Modal - Bisa di-scroll */}
+                        <div className="p-4 sm:p-6 lg:p-8 overflow-y-auto flex-1 custom-scrollbar bg-gray-50/30 dark:bg-gray-900/30">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
                                 
                                 {/* Blok Kiri: Data Fundamental */}
@@ -1223,28 +1213,29 @@ const DailyData = ({ authUser }) => {
                                         </div>
                                     </div>
 
-                                    <div className="pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
+                                    <div className="pt-4 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
                                         <Label icon="ph-gavel">Keputusan Final (Result)</Label>
-                                        <select className={`${inputClass} font-black text-base py-3 ${formData.results === 'Acc' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : formData.results === 'Reject' ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-amber-600 bg-amber-50 border-amber-200'}`} value={formData.results} onChange={e=>setFormData({...formData, results: e.target.value})}>
-                                            <option value="Pending">⚠️ Pending (Menunggu Diproses)</option>
+                                        <select className={`${inputClass} font-black text-base py-3 sm:py-3 ${formData.results === 'Acc' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : formData.results === 'Reject' ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-amber-600 bg-amber-50 border-amber-200'}`} value={formData.results} onChange={e=>setFormData({...formData, results: e.target.value})}>
+                                            <option value="Pending">⚠️ Pending (Menunggu)</option>
                                             <option value="Acc">✅ Acc (Diterima)</option>
-                                            <option value="Reject">❌ Reject (Gugur/Ditolak)</option>
+                                            <option value="Reject">❌ Reject (Ditolak)</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Tombol Aksi Bawah */}
-                            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                    Batalkan Pengisian
-                                </button>
-                                <button type="submit" className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/30 hover:bg-indigo-700 flex justify-center items-center transition-all transform hover:-translate-y-0.5">
-                                    <i className="ph-bold ph-floppy-disk mr-2 text-xl"></i> {modalMode === 'add' ? 'Terbitkan Data Pelamar' : 'Simpan Perubahan'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        {/* Footer Modal - Terkunci di Bawah */}
+                        <div className="px-5 py-4 sm:px-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 shrink-0 pb-6 sm:pb-4">
+                            <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3.5 sm:py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                Batal
+                            </button>
+                            <button type="submit" className="w-full sm:w-auto px-8 py-3.5 sm:py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/30 hover:bg-indigo-700 flex justify-center items-center transition-all">
+                                <i className="ph-bold ph-floppy-disk mr-2 text-xl"></i> {modalMode === 'add' ? 'Terbitkan Data' : 'Simpan Perubahan'}
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
             )}
         </div>
