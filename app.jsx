@@ -4200,54 +4200,153 @@ const UserManagement = ({ authUser }) => {
 const InstallPWA = () => {
     const [supportsPWA, setSupportsPWA] = useState(false);
     const [promptInstall, setPromptInstall] = useState(null);
+    const [isIOS, setIsIOS] = useState(false);
+    const [isStandalone, setIsStandalone] = useState(false);
 
     useEffect(() => {
+        // ========================================================
+        // 1. INJEKSI MANIFEST & META TAGS SECARA VIRTUAL (TANPA FILE)
+        // ========================================================
+        const setupVirtualPWA = () => {
+            // A. Buat Manifest.json Virtual
+            const manifest = {
+                name: "Team AzurLize Management",
+                short_name: "AzurLize",
+                start_url: window.location.href, // Otomatis mengikuti URL saat ini
+                display: "standalone",
+                background_color: "#0B0F19",
+                theme_color: "#4f46e5",
+                icons: [
+                    {
+                        // Pakai URL gambar dari internet karena tidak ada folder lokal
+                        src: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    }
+                ]
+            };
+            
+            const manifestString = JSON.stringify(manifest);
+            const manifestUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(manifestString);
+            
+            let manifestLink = document.querySelector('link[rel="manifest"]');
+            if (!manifestLink) {
+                manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                document.head.appendChild(manifestLink);
+            }
+            manifestLink.href = manifestUrl;
+
+            // B. Buat Meta Tag Khusus iOS Virtual
+            const metaTags = [
+                { name: 'apple-mobile-web-app-capable', content: 'yes' },
+                { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+                { name: 'apple-mobile-web-app-title', content: 'AzurLize' }
+            ];
+            
+            metaTags.forEach(tag => {
+                if (!document.querySelector(`meta[name="${tag.name}"]`)) {
+                    const meta = document.createElement('meta');
+                    meta.name = tag.name;
+                    meta.content = tag.content;
+                    document.head.appendChild(meta);
+                }
+            });
+
+            // C. Buat Ikon Apple Touch Virtual
+            let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+            if (!appleIcon) {
+                appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                appleIcon.href = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                document.head.appendChild(appleIcon);
+            }
+
+            // D. Buat Service Worker Virtual (via Blob)
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    const CACHE_NAME = 'azurlize-v1';
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl).catch(() => {
+                    // Abaikan error jika browser memblokir Blob SW karena setelan keamanan ketat
+                });
+            }
+        };
+
+        setupVirtualPWA();
+
+        // ========================================================
+        // 2. LOGIKA DETEKSI DAN INSTALASI PWA
+        // ========================================================
+        const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        setIsStandalone(checkStandalone);
+
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+        setIsIOS(isIosDevice);
+
         const handler = e => {
-            // Mencegah pop-up bawaan browser muncul secara otomatis
             e.preventDefault();
             setSupportsPWA(true);
             setPromptInstall(e);
         };
 
         window.addEventListener("beforeinstallprompt", handler);
-
         return () => window.removeEventListener("beforeinstallprompt", handler);
     }, []);
 
     const handleInstall = async (e) => {
         e.preventDefault();
         if (!promptInstall) return;
-
-        // Munculkan pop-up instalasi bawaan sistem operasi
-        promptInstall.prompt();
-
-        // Tunggu respon pengguna (Accept / Cancel)
+        promptInstall.prompt(); 
         const { outcome } = await promptInstall.userChoice;
         if (outcome === 'accepted') {
-            setSupportsPWA(false); // Sembunyikan tombol setelah berhasil diinstal
+            setSupportsPWA(false); 
         }
     };
 
-    // Jangan tampilkan tombol jika perangkat tidak mendukung atau app sudah diinstal
-    if (!supportsPWA) return null;
+    if (isStandalone) return null;
+    if (!supportsPWA && !isIOS) return null;
 
     return (
-        <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center text-indigo-600 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-4 rounded-xl flex items-center justify-between shadow-sm mx-4 mt-4 md:mx-8 mb-4">
+            <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center text-indigo-600 shadow-sm border border-gray-200 dark:border-gray-700 shrink-0">
                     <i className="ph-fill ph-app-window text-xl"></i>
                 </div>
-                <div>
-                    <h4 className="font-bold text-sm text-gray-900 dark:text-white">Install RecruitOps</h4>
-                    <p className="text-[10px] text-gray-500">Akses lebih cepat langsung dari layar utama Anda.</p>
+                <div className="min-w-0">
+                    <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Install AzurLize</h4>
+                    <p className="text-[10px] text-gray-500 leading-tight">
+                        {isIOS 
+                            ? "Ketuk ikon Share (Kotak Panah Atas) di browser bawah, lalu pilih 'Add to Home Screen'." 
+                            : "Akses lebih cepat langsung dari layar utama Anda."}
+                    </p>
                 </div>
             </div>
-            <button 
-                onClick={handleInstall} 
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-md transition-all active:scale-95"
-            >
-                Install App
-            </button>
+            
+            {supportsPWA && !isIOS && (
+                <button 
+                    onClick={handleInstall} 
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-md transition-all active:scale-95 shrink-0 ml-2"
+                >
+                    Install App
+                </button>
+            )}
+
+            {isIOS && (
+                <div className="flex flex-col items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold shrink-0 ml-2 animate-bounce">
+                    <i className="ph-bold ph-export text-xl"></i>
+                </div>
+            )}
         </div>
     );
 };
