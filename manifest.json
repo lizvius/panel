@@ -1,23 +1,16 @@
 {
-  "short_name": "RecruitOps",
-  "name": "RecruitOps Management System",
-  "description": "Sistem Manajemen Performa Recruiter",
+  "short_name": "AzurLize",
+  "name": "Team AzurLize Management",
   "icons": [
     {
-      "src": "/logo192.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "theme_color": "#4f46e5",
-  "background_color": "#ffffff"
+  "background_color": "#0B0F19"
 }
