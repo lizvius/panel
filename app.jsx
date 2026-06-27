@@ -4204,96 +4204,19 @@ const InstallPWA = () => {
     const [isStandalone, setIsStandalone] = useState(false);
 
     useEffect(() => {
-        // ========================================================
-        // 1. INJEKSI MANIFEST & META TAGS SECARA VIRTUAL (TANPA FILE)
-        // ========================================================
-        const setupVirtualPWA = () => {
-            // A. Buat Manifest.json Virtual
-            const manifest = {
-                name: "Team AzurLize Management",
-                short_name: "AzurLize",
-                start_url: window.location.href, // Otomatis mengikuti URL saat ini
-                display: "standalone",
-                background_color: "#0B0F19",
-                theme_color: "#4f46e5",
-                icons: [
-                    {
-                        // Pakai URL gambar dari internet karena tidak ada folder lokal
-                        src: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-                        sizes: "512x512",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }
-                ]
-            };
-            
-            const manifestString = JSON.stringify(manifest);
-            const manifestUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(manifestString);
-            
-            let manifestLink = document.querySelector('link[rel="manifest"]');
-            if (!manifestLink) {
-                manifestLink = document.createElement('link');
-                manifestLink.rel = 'manifest';
-                document.head.appendChild(manifestLink);
-            }
-            manifestLink.href = manifestUrl;
+        // Registrasi Service Worker (Wajib untuk PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW fail:', err));
+        }
 
-            // B. Buat Meta Tag Khusus iOS Virtual
-            const metaTags = [
-                { name: 'apple-mobile-web-app-capable', content: 'yes' },
-                { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-                { name: 'apple-mobile-web-app-title', content: 'AzurLize' }
-            ];
-            
-            metaTags.forEach(tag => {
-                if (!document.querySelector(`meta[name="${tag.name}"]`)) {
-                    const meta = document.createElement('meta');
-                    meta.name = tag.name;
-                    meta.content = tag.content;
-                    document.head.appendChild(meta);
-                }
-            });
-
-            // C. Buat Ikon Apple Touch Virtual
-            let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
-            if (!appleIcon) {
-                appleIcon = document.createElement('link');
-                appleIcon.rel = 'apple-touch-icon';
-                appleIcon.href = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                document.head.appendChild(appleIcon);
-            }
-
-            // D. Buat Service Worker Virtual (via Blob)
-            if ('serviceWorker' in navigator) {
-                const swCode = `
-                    const CACHE_NAME = 'azurlize-v1';
-                    self.addEventListener('install', (e) => self.skipWaiting());
-                    self.addEventListener('activate', (e) => self.clients.claim());
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-                    });
-                `;
-                const blob = new Blob([swCode], { type: 'text/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                
-                navigator.serviceWorker.register(swUrl).catch(() => {
-                    // Abaikan error jika browser memblokir Blob SW karena setelan keamanan ketat
-                });
-            }
-        };
-
-        setupVirtualPWA();
-
-        // ========================================================
-        // 2. LOGIKA DETEKSI DAN INSTALASI PWA
-        // ========================================================
+        // Deteksi Standalone & iOS
         const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         setIsStandalone(checkStandalone);
 
         const userAgent = window.navigator.userAgent.toLowerCase();
-        const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-        setIsIOS(isIosDevice);
+        setIsIOS(/iphone|ipad|ipod/.test(userAgent));
 
+        // Tangkap event PWA Install
         const handler = e => {
             e.preventDefault();
             setSupportsPWA(true);
@@ -4327,17 +4250,14 @@ const InstallPWA = () => {
                     <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">Install AzurLize</h4>
                     <p className="text-[10px] text-gray-500 leading-tight">
                         {isIOS 
-                            ? "Ketuk ikon Share (Kotak Panah Atas) di browser bawah, lalu pilih 'Add to Home Screen'." 
+                            ? "Ketuk ikon Share di bawah, lalu pilih 'Add to Home Screen'." 
                             : "Akses lebih cepat langsung dari layar utama Anda."}
                     </p>
                 </div>
             </div>
             
             {supportsPWA && !isIOS && (
-                <button 
-                    onClick={handleInstall} 
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-md transition-all active:scale-95 shrink-0 ml-2"
-                >
+                <button onClick={handleInstall} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow-md transition-all active:scale-95 shrink-0 ml-2">
                     Install App
                 </button>
             )}
@@ -4350,7 +4270,6 @@ const InstallPWA = () => {
         </div>
     );
 };
-
 
 const App = () => {
     const [authUser, setAuthUser] = useState(() => {
